@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تبدیلگر Base64 و پردازشگر کانفیگ</title>
+    <title>مدیریت و تبدیل کانفیگ‌های اشتراک</title>
     <!-- Favicon for Base64 operations (arrows symbolizing encode/decode) -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%236366F1' d='M10 16.5V7.5L16 12L10 16.5ZM14 7.5L8 12L14 16.5V7.5Z'/%3E%3C/svg%3E">
     <!-- Tailwind CSS CDN -->
@@ -271,7 +271,7 @@
             <span id="themeIcon">☀️</span> <!-- Sun/Moon emoji -->
         </label>
 
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">تبدیلگر Base64 و پردازشگر کانفیگ</h1>
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">مدیریت و تبدیل کانفیگ‌های اشتراک</h1>
         <p class="text-gray-600 mb-8">نوع ورودی و عملیات تبدیل را انتخاب کنید.</p>
 
         <!-- Worker URL Configuration -->
@@ -363,7 +363,7 @@
                 <!-- Count Input -->
                 <div class="w-full md:w-1/2">
                     <label for="countInput" class="block text-gray-700 text-sm font-medium mb-2">تعداد کانفیگ‌ها:</label>
-                    <div class="flex items-center gap-2">
+                    <div class="checkbox-group">
                         <input type="number" id="countInput" value="0" min="0" disabled
                                class="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700">
                         <input type="checkbox" id="unlimitedCount" class="hidden" checked>
@@ -492,7 +492,7 @@
             <p>در حال پردازش...</p>
         </div>
 
-        <div id="resultArea" class="mt-8 p-4 bg-gray-100 border border-gray-200 rounded-xl hidden">
+        <div id="resultArea" class="mt-8 p-4 bg-gray-100 border border-gray-200 rounded-xl hidden flex flex-col gap-4">
             <!-- Link Result Display -->
             <div id="linkResultContainer" class="mb-4 hidden">
                 <p class="text-gray-700 text-right mb-2">لینک قابل اشتراک‌گذاری:</p>
@@ -677,16 +677,12 @@
                             customProtocolsInput.disabled = false;
                         } else {
                             // If "All Protocols" is unchecked
-                            // If "All Protocols" is unchecked, and no other specific protocols are checked,
-                            // then re-enable all specific protocol checkboxes.
-                            const anyOtherSpecificChecked = Array.from(protocolCheckboxes).some(cb => cb.checked && cb.id !== 'protocolAll');
-                            if (!anyOtherSpecificChecked) {
-                                Array.from(protocolCheckboxes).forEach(otherCheckbox => {
-                                    if (otherCheckbox.id !== 'protocolAll') {
-                                        otherCheckbox.disabled = false; // Enable specific protocols
-                                    }
-                                });
-                            }
+                            // Re-enable all specific protocol checkboxes
+                            Array.from(protocolCheckboxes).forEach(otherCheckbox => {
+                                if (otherCheckbox.id !== 'protocolAll') {
+                                    otherCheckbox.disabled = false; // Enable specific protocols
+                                }
+                            });
                             // Custom protocols input remains enabled
                             customProtocolsInput.disabled = false;
                         }
