@@ -38,13 +38,15 @@
             --config-filter-bg: #f3f4f6; /* Light Gray */
             --worker-url-border: #90caf9; /* Medium Blue */
             --config-filter-border: #d1d5db; /* Light Gray */
+            --checkbox-label-bg: #ffffff; /* Default white for checkbox labels */
+            --checkbox-label-hover-bg: #f3f4f6; /* Light gray for hover */
         }
 
         /* Dark mode styles (futuristic/neon) */
         [data-theme='dark'] {
             --bg-color: #0a0a1a; /* Very deep blue/purple */
             --container-bg: #1a1a3a; /* Darker blue-gray */
-            --text-color-primary: #e0e0f0; /* Bright white/light gray */
+            --text-color-primary: #f0f0f0; /* Brighter white for better visibility */
             --text-color-secondary: #c0c0d0; /* Lighter gray for better visibility */
             --border-color: #404060; /* Darker border */
             --input-bg: #2a2a4a; /* Darker, integrated input */
@@ -67,6 +69,8 @@
             --config-filter-bg: #1f1f3f; /* Darker shade for config filter box */
             --worker-url-border: #404060; /* Darker border for worker URL box */
             --config-filter-border: #404060; /* Darker border for config filter box */
+            --checkbox-label-bg: #2a2a4a; /* Darker background for checkbox labels */
+            --checkbox-label-hover-bg: #3a3a5a; /* Even darker for hover */
         }
 
         body {
@@ -141,7 +145,7 @@
             box-shadow: 0 6px 12px -2px var(--shadow-color), 0 3px 6px -1px var(--shadow-color-light), 0 0 20px var(--input-border-focus); /* Enhanced glow on hover */
             opacity: 1; /* Ensure full opacity */
         }
-        .radio-group label, .input-type-selector label, .checkbox-group label {
+        .radio-group label, .input-type-selector label {
             display: flex;
             align-items: center;
             padding: 0.75rem 1rem;
@@ -153,17 +157,42 @@
             color: var(--text-color-primary);
             font-weight: 500; /* Medium weight for labels */
         }
-        .radio-group input[type="radio"]:checked + label, .input-type-selector input[type="radio"]:checked + label, .checkbox-group input[type="checkbox"]:checked + label {
+        .radio-group input[type="radio"]:checked + label, .input-type-selector input[type="radio"]:checked + label {
             border-color: var(--input-border-focus);
             background-color: var(--blue-highlight-bg);
             color: var(--blue-highlight-text);
             box-shadow: 0 0 10px rgba(var(--input-border-focus-rgb, 167, 32, 224), 0.5); /* Subtle glow on checked */
         }
-        .radio-group label:hover, .input-type-selector label:hover, .checkbox-group label:hover {
+        .radio-group label:hover, .input-type-selector label:hover {
             background-color: var(--blue-highlight-bg);
             opacity: 0.95;
             box-shadow: 0 0 8px rgba(var(--input-border-focus-rgb, 167, 32, 224), 0.3);
         }
+        /* Specific styling for checkbox labels (unlimited, cloudflare, protocols) */
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            background-color: var(--checkbox-label-bg); /* Use new variable */
+            color: var(--text-color-primary);
+            font-weight: 500;
+        }
+        .checkbox-group label:hover {
+            background-color: var(--checkbox-label-hover-bg); /* Use new variable */
+            opacity: 0.95;
+            box-shadow: 0 0 8px rgba(var(--input-border-focus-rgb, 167, 32, 224), 0.3);
+        }
+        .checkbox-group input[type="checkbox"]:checked + label {
+            border-color: var(--input-border-focus);
+            background-color: var(--blue-highlight-bg);
+            color: var(--blue-highlight-text);
+            box-shadow: 0 0 10px rgba(var(--input-border-focus-rgb, 167, 32, 224), 0.5);
+        }
+
         /* Extracting RGB for dynamic shadow */
         [data-theme='dark'] { --input-border-focus-rgb: 167, 32, 224; }
         :root { --input-border-focus-rgb: 74, 144, 226; } /* For light mode */
@@ -193,10 +222,6 @@
             display: block; /* Ensure it takes full width for ellipsis */
             padding: 0.5rem; /* Add padding to the link box */
         }
-        .text-gray-700 { color: var(--text-color-primary); }
-        .text-gray-600 { color: var(--text-color-secondary); }
-        .text-indigo-600 { color: var(--input-border-focus); } /* For links */
-        .text-green-600 { color: var(--button-secondary-hover); }
         /* Update these to use new variables */
         .worker-url-box {
             background-color: var(--worker-url-bg);
