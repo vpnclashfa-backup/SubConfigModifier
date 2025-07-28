@@ -45,7 +45,7 @@
             --bg-color: #0a0a1a; /* Very deep blue/purple */
             --container-bg: #1a1a3a; /* Darker blue-gray */
             --text-color-primary: #e0e0f0; /* Bright white/light gray */
-            --text-color-secondary: #a0a0c0; /* Gray-400 */
+            --text-color-secondary: #c0c0d0; /* Lighter gray for better visibility */
             --border-color: #404060; /* Darker border */
             --input-bg: #2a2a4a; /* Darker, integrated input */
             --input-border-focus: #a720e0; /* Vibrant purple/magenta */
@@ -170,7 +170,7 @@
 
 
         .result-area {
-            word-break: break-all;
+            overflow-wrap: break-word; /* Better word breaking */
             text-align: left;
             direction: ltr;
             overflow-x: auto;
@@ -185,6 +185,13 @@
             overflow-y: auto; /* Enable vertical scrolling if content exceeds max-height */
             white-space: pre-wrap; /* Preserve whitespace and allow wrapping */
             font-family: 'Vazirmatn', monospace; /* Use monospace for code-like content */
+        }
+        #resultLink {
+            white-space: nowrap; /* Prevent line breaks */
+            overflow: hidden; /* Hide overflowing content */
+            text-overflow: ellipsis; /* Show ellipsis for overflow */
+            display: block; /* Ensure it takes full width for ellipsis */
+            padding: 0.5rem; /* Add padding to the link box */
         }
         .text-gray-700 { color: var(--text-color-primary); }
         .text-gray-600 { color: var(--text-color-secondary); }
