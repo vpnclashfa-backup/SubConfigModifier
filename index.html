@@ -40,6 +40,8 @@
             --config-filter-border: #d1d5db; /* Light Gray */
             --checkbox-label-bg: #ffffff; /* Default white for checkbox labels */
             --checkbox-label-hover-bg: #f3f4f6; /* Light gray for hover */
+            --input-field-bg: #f9fafb; /* Default for text/url/file inputs */
+            --input-field-border: #d1d5db; /* Default for text/url/file inputs */
         }
 
         /* Dark mode styles (futuristic/neon) */
@@ -71,6 +73,8 @@
             --config-filter-border: #404060; /* Darker border for config filter box */
             --checkbox-label-bg: #2a2a4a; /* Darker background for checkbox labels */
             --checkbox-label-hover-bg: #3a3a5a; /* Even darker for hover */
+            --input-field-bg: #2a2a4a; /* Darker for text/url/file inputs */
+            --input-field-border: #404060; /* Darker for text/url/file inputs */
         }
 
         body {
@@ -110,9 +114,10 @@
         input[type="text"], textarea, input[type="file"], button, select {
             border-radius: 0.75rem;
         }
-        input[type="text"], textarea, input[type="file"], select {
-            background-color: var(--input-bg);
-            border-color: var(--border-color);
+        /* Updated input field styling to use new variables */
+        input[type="text"], textarea, input[type="file"] {
+            background-color: var(--input-field-bg);
+            border-color: var(--input-field-border);
             color: var(--text-color-primary);
             transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
@@ -153,7 +158,7 @@
             border: 2px solid var(--border-color);
             cursor: pointer;
             transition: all 0.3s ease-in-out;
-            background-color: var(--input-bg);
+            background-color: var(--input-bg); /* Now uses input-bg for consistency */
             color: var(--text-color-primary);
             font-weight: 500; /* Medium weight for labels */
         }
@@ -164,7 +169,7 @@
             box-shadow: 0 0 10px rgba(var(--input-border-focus-rgb, 167, 32, 224), 0.5); /* Subtle glow on checked */
         }
         .radio-group label:hover, .input-type-selector label:hover {
-            background-color: var(--blue-highlight-bg);
+            background-color: var(--checkbox-label-hover-bg); /* Use checkbox-label-hover-bg for consistency */
             opacity: 0.95;
             box-shadow: 0 0 8px rgba(var(--input-border-focus-rgb, 167, 32, 224), 0.3);
         }
@@ -346,19 +351,19 @@
         <!-- Input Fields (Dynamic) -->
         <div id="inputContainer" class="mb-6">
             <div id="linkInputContainer">
-                <label for="urlInput" class="block text-gray-700 text-right text-sm font-medium mb-2">لینک محتوا:</label>
+                <label for="urlInput" class="block text-gray-700 text-right text-sm font-medium mb-2">لینک اشتراک ورودی:</label>
                 <input type="text" id="urlInput" placeholder="مثال: https://github.com/user/repo/blob/main/file.txt"
-                       class="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700">
+                       class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700">
             </div>
             <div id="textInputContainer" class="hidden">
                 <label for="textInput" class="block text-gray-700 text-right text-sm font-medium mb-2">متن مورد نظر:</label>
                 <textarea id="textInput" rows="6" placeholder="متن خود را اینجا وارد کنید..."
-                          class="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700"></textarea>
+                          class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700"></textarea>
             </div>
             <div id="fileInputContainer" class="hidden">
                 <label for="fileInput" class="block text-gray-700 text-right text-sm font-medium mb-2">فایل مورد نظر:</label>
                 <input type="file" id="fileInput"
-                       class="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                       class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
             </div>
         </div>
 
@@ -509,7 +514,7 @@
                 <div class="mt-3">
                     <label for="customProtocols" class="block text-gray-700 text-sm font-medium mb-2">پروتکل‌های سفارشی (کاما-جدا شده):</label>
                     <input type="text" id="customProtocols" placeholder="مثال: wireguard,ssh"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700">
+                           class="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700">
                 </div>
             </div>
         </div>
