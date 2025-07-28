@@ -376,10 +376,12 @@
                 <!-- Cloudflare Only Checkbox -->
                 <div class="w-full md:w-1/2 md:mt-0 mt-4">
                     <label for="cloudflareOnly" class="block text-gray-700 text-sm font-medium mb-2">فیلتر Cloudflare:</label>
-                    <input type="checkbox" id="cloudflareOnly" class="hidden">
-                    <label for="cloudflareOnly" class="flex items-center justify-center cursor-pointer py-2 px-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 text-gray-700 text-sm">
-                        <span class="mr-2">فقط کانفیگ‌های Cloudflare</span>
-                    </label>
+                    <div class="checkbox-group"> <!-- Added checkbox-group here for consistent styling -->
+                        <input type="checkbox" id="cloudflareOnly" class="hidden">
+                        <label for="cloudflareOnly" class="flex items-center justify-center cursor-pointer py-2 px-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 text-gray-700 text-sm">
+                            <span class="mr-2">فقط کانفیگ‌های Cloudflare</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -662,39 +664,55 @@
 
             protocolCheckboxes.forEach(checkbox => {
                 checkbox.addEventListener('change', () => {
-                    if (checkbox.id === 'protocolAll' && checkbox.checked) {
-                        // If "All Protocols" is checked, uncheck others and disable custom input
-                        protocolCheckboxes.forEach(otherCheckbox => {
-                            if (otherCheckbox.id !== 'protocolAll') {
-                                otherCheckbox.checked = false;
-                                otherCheckbox.disabled = true; // Disable other checkboxes
+                    if (checkbox.id === 'protocolAll') {
+                        if (checkbox.checked) {
+                            // If "All Protocols" is checked
+                            Array.from(protocolCheckboxes).forEach(otherCheckbox => {
+                                if (otherCheckbox.id !== 'protocolAll') {
+                                    otherCheckbox.checked = false; // Uncheck specific protocols
+                                    otherCheckbox.disabled = true; // Disable specific protocols
+                                }
+                            });
+                            // Custom protocols input remains enabled as per user request
+                            customProtocolsInput.disabled = false;
+                        } else {
+                            // If "All Protocols" is unchecked
+                            // If "All Protocols" is unchecked, and no other specific protocols are checked,
+                            // then re-enable all specific protocol checkboxes.
+                            const anyOtherSpecificChecked = Array.from(protocolCheckboxes).some(cb => cb.checked && cb.id !== 'protocolAll');
+                            if (!anyOtherSpecificChecked) {
+                                Array.from(protocolCheckboxes).forEach(otherCheckbox => {
+                                    if (otherCheckbox.id !== 'protocolAll') {
+                                        otherCheckbox.disabled = false; // Enable specific protocols
+                                    }
+                                });
                             }
-                        });
-                        customProtocolsInput.disabled = true;
-                        customProtocolsInput.value = '';
-                    } else if (checkbox.id === 'protocolAll' && !checkbox.checked) {
-                        // If "All Protocols" is unchecked, enable others and custom input
-                        protocolCheckboxes.forEach(otherCheckbox => {
-                            if (otherCheckbox.id !== 'protocolAll') {
-                                otherCheckbox.disabled = false; // Enable other checkboxes
+                            // Custom protocols input remains enabled
+                            customProtocolsInput.disabled = false;
+                        }
+                    } else {
+                        // If a specific protocol checkbox is changed
+                        if (checkbox.checked) {
+                            // If a specific protocol is checked
+                            protocolAllCheckbox.checked = false; // Uncheck "All Protocols"
+                            protocolAllCheckbox.disabled = true; // Disable "All Protocols"
+                            // Custom protocols input remains enabled
+                            customProtocolsInput.disabled = false;
+                        } else {
+                            // If a specific protocol is unchecked
+                            const anyOtherSpecificChecked = Array.from(protocolCheckboxes).some(cb => cb.checked && cb.id !== 'protocolAll');
+                            if (!anyOtherSpecificChecked) {
+                                // If no other specific protocols are checked, re-enable "All Protocols"
+                                protocolAllCheckbox.disabled = false;
                             }
-                        });
-                        customProtocolsInput.disabled = false;
-                    } else if (checkbox.id !== 'protocolAll' && checkbox.checked) {
-                        // If any specific protocol is checked, uncheck "All Protocols"
-                        protocolAllCheckbox.checked = false;
-                        protocolAllCheckbox.disabled = true; // Disable "All Protocols"
-                    } else if (checkbox.id !== 'protocolAll' && !checkbox.checked) {
-                        // If a specific protocol is unchecked, check if any others are still checked
-                        const anyOtherChecked = Array.from(protocolCheckboxes).some(cb => cb.checked && cb.id !== 'protocolAll');
-                        if (!anyOtherChecked) {
-                            protocolAllCheckbox.disabled = false; // Enable "All Protocols" if no others are checked
+                            // Custom protocols input remains enabled
+                            customProtocolsInput.disabled = false;
                         }
                     }
                 });
             });
-            // Initial state for protocol checkboxes
-            // Set initial state based on default checks
+            
+            // Initial state setup for protocol checkboxes on DOMContentLoaded
             unlimitedCountCheckbox.checked = true; // Default unlimited
             countInput.disabled = true; // Disable count input if unlimited is checked
             countInput.value = 0; // Set count to 0 for unlimited
@@ -706,7 +724,7 @@
                     checkbox.checked = false; // Ensure other protocols are unchecked
                 }
             });
-            customProtocolsInput.disabled = protocolAllCheckbox.checked;
+            customProtocolsInput.disabled = false; // Custom protocols always enabled
 
             cloudflareOnlyCheckbox.checked = false; // Default Cloudflare only to false
 
