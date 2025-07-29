@@ -912,6 +912,7 @@
                             }
                             displayedContent = await contentFetchResponse.text();
                             // For link input, the download link is the worker's URL with download=true
+                            // The worker will now handle Content-Disposition: attachment for this URL
                             downloadHref = `${shareableLink}&download=true`; 
                         } else {
                             throw new Error('پاسخ نامعتبر از ورکر برای لینک.');
@@ -923,6 +924,8 @@
 
                             // Create Blob for download
                             let blob;
+                            let blobMimeType = resultJson.mimeType || 'application/octet-stream';
+
                             if (selectedOutputFormat === 'base64') {
                                 // If worker returned base64, decode it to binary for Blob
                                 const binaryString = atob(displayedContent);
@@ -931,12 +934,13 @@
                                 for (let i = 0; i < len; i++) {
                                     bytes[i] = binaryString.charCodeAt(i);
                                 }
-                                blob = new Blob([bytes], { type: resultJson.mimeType || 'application/octet-stream' });
+                                blob = new Blob([bytes], { type: blobMimeType });
                             } else { // outputFormat === 'normal'
                                 // If worker returned normal text, create Blob directly
-                                blob = new Blob([displayedContent], { type: resultJson.mimeType || 'text/plain;charset=utf-8' });
+                                blob = new Blob([displayedContent], { type: blobMimeType + ';charset=utf-8' });
                             }
                             downloadHref = URL.createObjectURL(blob);
+                            console.log('Generated Blob URL for download:', downloadHref);
                         } else {
                             throw new Error('پاسخ نامعتبر از ورکر برای متن/فایل.');
                         }
@@ -955,14 +959,17 @@
                     downloadButton.href = downloadHref;
 
                     // Revoke object URL after a short delay for text/file inputs
+                    // This is important to prevent memory leaks in the browser
                     if (selectedInputType !== 'link' && downloadHref.startsWith('blob:')) {
                         const currentDownloadHref = downloadHref; // Capture current href
                         setTimeout(() => {
                             URL.revokeObjectURL(currentDownloadHref);
+                            console.log('Revoked Blob URL:', currentDownloadHref);
                         }, 100); // Small delay to ensure download starts
                     }
 
                 } catch (e) {
+                    console.error('Error during processing or download setup:', e);
                     errorText.textContent = 'خطا در عملیات: ' + e.message;
                     errorMessage.classList.remove('hidden');
                 } finally {
@@ -1034,22 +1041,28 @@
             });
 
             // Add logging for download button click
-            downloadButton.addEventListener('click', () => {
+            downloadButton.addEventListener('click', (event) => {
                 console.log('Download button clicked.');
                 console.log('Download href:', downloadButton.href);
                 console.log('Download filename:', downloadButton.download);
 
                 if (!downloadButton.href || downloadButton.href === '#') {
                     console.error('Download failed: href is empty or invalid.');
-                    // You might want to show a user-friendly error message here as well
                     errorText.textContent = 'خطا در آماده‌سازی فایل برای دانلود. لطفاً دوباره تلاش کنید.';
                     errorMessage.classList.remove('hidden');
+                    event.preventDefault(); // Prevent default action if href is invalid
                 } else if (downloadButton.href.startsWith('blob:')) {
                     console.log('Attempting to download Blob URL.');
+                    // For Blob URLs, the browser handles the download directly.
+                    // No need to prevent default or manually click.
                 } else if (downloadButton.href.startsWith('http')) {
                     console.log('Attempting to download from external URL (via worker).');
+                    // For HTTP/HTTPS URLs, the browser will navigate or download based on worker's headers.
                 } else {
                     console.warn('Unknown download href type:', downloadButton.href);
+                    errorText.textContent = 'خطای ناشناخته در لینک دانلود.';
+                    errorMessage.classList.remove('hidden');
+                    event.preventDefault(); // Prevent default action for unknown types
                 }
             });
         });
