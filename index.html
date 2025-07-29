@@ -929,6 +929,7 @@
 
                     let shareableLink = '';
                     let displayedContent = '';
+                    // downloadHref will be set by the downloadFile function now
 
                     // --- Unified Content Display and Blob Download Setup ---
                     if (selectedInputType === 'link' && resultJson.url) {
@@ -969,6 +970,11 @@
                         downloadMimeTypeForButton += ';charset=utf-8';
                     }
                     downloadFilenameForButton = finalDownloadFilename; // Ensure filename is also stored
+
+                    // Ensure .txt extension is added if not present for text files
+                    if (downloadMimeTypeForButton.includes('text') && !downloadFilenameForButton.endsWith('.txt')) {
+                        downloadFilenameForButton += '.txt';
+                    }
 
 
                 } catch (e) {
