@@ -109,10 +109,13 @@
             color: var(--text-color-primary);
             transition: color 0.5s ease;
         }
-        .text-gray-600 { color: var(--text-color-secondary); } /* Override tailwind default */
-        .text-gray-700 { color: var(--text-color-primary); } /* Override tailwind default */
-        .text-gray-800 { color: var(--text-color-primary); } /* Override tailwind default */
-        .text-gray-500 { color: var(--text-color-secondary); } /* Override tailwind default */
+        /* Override specific text colors that might be hardcoded by Tailwind */
+        .text-gray-600 { color: var(--text-color-secondary) !important; }
+        .text-gray-700 { color: var(--text-color-primary) !important; }
+        .text-gray-800 { color: var(--text-color-primary) !important; }
+        .text-gray-500 { color: var(--text-color-secondary) !important; }
+        .text-indigo-600 { color: var(--input-border-focus) !important; } /* For links */
+        .text-blue-700 { color: var(--blue-highlight-text) !important; } /* For worker URL label */
 
 
         input[type="text"], textarea, input[type="file"], button, select {
@@ -121,7 +124,8 @@
         /* Updated input field styling to use new variables */
         input[type="text"], textarea, input[type="file"] {
             background-color: var(--input-field-bg);
-            border-color: var(--input-field-border);
+            border-color: var(--input-field-border); /* Use variable for border */
+            border-width: 1px; /* Ensure border is visible */
             color: var(--text-color-primary);
             transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
@@ -217,8 +221,7 @@
             text-align: left;
             direction: ltr;
             overflow-x: auto;
-            background-color: var(--input-bg); /* This is for the pre/a elements inside */
-            border: 1px solid var(--border-color); /* This is for the pre/a elements inside */
+            /* Removed background-color and border from here */
             color: var(--text-color-primary);
             padding: 1rem; /* More padding */
             border-radius: 0.75rem; /* Consistent border radius */
@@ -229,6 +232,8 @@
             white-space: pre-wrap; /* Preserve whitespace and allow wrapping */
             font-family: 'Vazirmatn', monospace; /* Use monospace for code-like content */
             color: var(--text-color-primary); /* Ensure text color is primary */
+            background-color: var(--input-field-bg); /* Use input field background for content display */
+            border: 1px solid var(--input-field-border); /* Use input field border for content display */
         }
         #resultLink {
             white-space: nowrap; /* Prevent line breaks */
@@ -237,14 +242,9 @@
             display: block; /* Ensure it takes full width for ellipsis */
             padding: 0.5rem; /* Add padding to the link box */
             color: var(--input-border-focus); /* Ensure link color is highlight */
+            background-color: var(--input-field-bg); /* Use input field background for link display */
+            border: 1px solid var(--input-field-border); /* Use input field border for link display */
         }
-        /* Override specific text colors that might be hardcoded by Tailwind */
-        .text-gray-700 { color: var(--text-color-primary) !important; }
-        .text-gray-600 { color: var(--text-color-secondary) !important; }
-        .text-gray-800 { color: var(--text-color-primary) !important; }
-        .text-gray-500 { color: var(--text-color-secondary) !important; }
-        .text-indigo-600 { color: var(--input-border-focus) !important; } /* For links */
-        .text-blue-700 { color: var(--blue-highlight-text) !important; } /* For worker URL label */
 
 
         .bg-red-100 { background-color: var(--error-bg); }
@@ -362,7 +362,7 @@
         <div id="inputContainer" class="mb-6">
             <div id="linkInputContainer">
                 <label for="urlInput" class="block text-gray-700 text-right text-sm font-medium mb-2">لینک اشتراک ورودی:</label>
-                <input type="text" id="urlInput" placeholder="مثال: https://github.com/user/repo/blob/main/file.txt"
+                <input type="text" id="urlInput" placeholder="مثال: https://my-worker.yourusername.workers.dev"
                        class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700">
             </div>
             <div id="textInputContainer" class="hidden">
@@ -412,7 +412,7 @@
                     <label for="countInput" class="block text-gray-700 text-sm font-medium mb-2">تعداد کانفیگ‌ها:</label>
                     <div class="checkbox-group">
                         <input type="number" id="countInput" value="0" min="0" disabled
-                               class="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700">
+                               class="w-24 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700">
                         <input type="checkbox" id="unlimitedCount" class="hidden" checked>
                         <label for="unlimitedCount" class="flex-grow justify-center cursor-pointer py-2 px-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 text-gray-700 text-sm">
                             نامحدود
@@ -539,7 +539,7 @@
             <p>در حال پردازش...</p>
         </div>
 
-        <div id="resultArea" class="mt-8 p-4 bg-gray-100 border border-gray-200 rounded-xl hidden flex flex-col gap-4 result-area-container">
+        <div id="resultArea" class="mt-8 p-4 rounded-xl hidden flex flex-col gap-4 result-area-container">
             <!-- Link Result Display -->
             <div id="linkResultContainer" class="mb-4 hidden">
                 <p class="text-gray-700 text-right mb-2">لینک قابل اشتراک‌گذاری:</p>
@@ -549,7 +549,7 @@
             <!-- Converted Content Display -->
             <div id="contentResultContainer" class="mb-4">
                 <p class="text-gray-700 text-right mb-2">محتوای تبدیل شده:</p>
-                <pre id="convertedContentDisplay" class="result-area text-gray-800 text-sm p-2 rounded-lg bg-gray-50"></pre>
+                <pre id="convertedContentDisplay" class="result-area text-gray-800 text-sm p-2 rounded-lg"></pre>
             </div>
             
             <div class="flex flex-col md:flex-row justify-center gap-4 mt-4">
@@ -921,14 +921,22 @@
                             displayedContent = resultJson.content; // This is the content from worker, either normal or base64
                             shareableLink = ''; // No shareable link for direct text/file input
 
+                            // Create Blob for download
+                            let blob;
                             if (selectedOutputFormat === 'base64') {
-                                // If the worker already returned Base64, use it directly for data URI
-                                downloadHref = `data:${resultJson.mimeType || 'application/octet-stream'};base64,${displayedContent}`;
+                                // If worker returned base64, decode it to binary for Blob
+                                const binaryString = atob(displayedContent);
+                                const len = binaryString.length;
+                                const bytes = new Uint8Array(len);
+                                for (let i = 0; i < len; i++) {
+                                    bytes[i] = binaryString.charCodeAt(i);
+                                }
+                                blob = new Blob([bytes], { type: resultJson.mimeType || 'application/octet-stream' });
                             } else { // outputFormat === 'normal'
-                                // If the worker returned normal text, encode it to Base64 for data URI
-                                // This handles Unicode characters correctly
-                                downloadHref = `data:${resultJson.mimeType || 'text/plain'};charset=utf-8;base64,${btoa(unescape(encodeURIComponent(displayedContent)))}`;
+                                // If worker returned normal text, create Blob directly
+                                blob = new Blob([displayedContent], { type: resultJson.mimeType || 'text/plain;charset=utf-8' });
                             }
+                            downloadHref = URL.createObjectURL(blob);
                         } else {
                             throw new Error('پاسخ نامعتبر از ورکر برای متن/فایل.');
                         }
@@ -945,6 +953,14 @@
                     }
                     convertedContentDisplay.textContent = displayedContent;
                     downloadButton.href = downloadHref;
+
+                    // Revoke object URL after a short delay for text/file inputs
+                    if (selectedInputType !== 'link' && downloadHref.startsWith('blob:')) {
+                        const currentDownloadHref = downloadHref; // Capture current href
+                        setTimeout(() => {
+                            URL.revokeObjectURL(currentDownloadHref);
+                        }, 100); // Small delay to ensure download starts
+                    }
 
                 } catch (e) {
                     errorText.textContent = 'خطا در عملیات: ' + e.message;
