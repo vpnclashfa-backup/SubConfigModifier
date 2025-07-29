@@ -742,7 +742,7 @@
                             // Custom protocols input remains enabled
                             customProtocolsInput.disabled = false;
                         } else {
-                            // If a specific protocol is unchecked
+                            // If a specific protocol is unchecked, check if any others are still checked
                             const anyOtherSpecificChecked = Array.from(protocolCheckboxes).some(cb => cb.checked && cb.id !== 'protocolAll');
                             if (!anyOtherSpecificChecked) {
                                 // If no other specific protocols are checked, re-enable "All Protocols"
@@ -1030,6 +1030,26 @@
                     errorMessage.classList.remove('hidden');
                 } finally {
                     document.body.removeChild(tempInput);
+                }
+            });
+
+            // Add logging for download button click
+            downloadButton.addEventListener('click', () => {
+                console.log('Download button clicked.');
+                console.log('Download href:', downloadButton.href);
+                console.log('Download filename:', downloadButton.download);
+
+                if (!downloadButton.href || downloadButton.href === '#') {
+                    console.error('Download failed: href is empty or invalid.');
+                    // You might want to show a user-friendly error message here as well
+                    errorText.textContent = 'خطا در آماده‌سازی فایل برای دانلود. لطفاً دوباره تلاش کنید.';
+                    errorMessage.classList.remove('hidden');
+                } else if (downloadButton.href.startsWith('blob:')) {
+                    console.log('Attempting to download Blob URL.');
+                } else if (downloadButton.href.startsWith('http')) {
+                    console.log('Attempting to download from external URL (via worker).');
+                } else {
+                    console.warn('Unknown download href type:', downloadButton.href);
                 }
             });
         });
