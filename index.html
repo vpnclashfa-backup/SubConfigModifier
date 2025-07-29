@@ -901,95 +901,61 @@
 
                     let shareableLink = '';
                     let displayedContent = '';
-                    let downloadHref = '#';
+                    // downloadHref will be set by the downloadFile function now
 
-                    // --- Unified Blob Download Logic ---
-                    // This section now handles creating the Blob for download for ALL input types.
-                    if (resultJson.content) {
-                        displayedContent = resultJson.content; // This is the content from worker, either normal or base64
-                        
-                        let blob;
-                        let blobMimeType = resultJson.mimeType || 'application/octet-stream';
-
-                        if (selectedOutputFormat === 'base64') {
-                            // If worker returned base64, decode it to binary for Blob
-                            const binaryString = atob(displayedContent);
-                            const len = binaryString.length;
-                            const bytes = new Uint8Array(len);
-                            for (let i = 0; i < len; i++) {
-                                bytes[i] = binaryString.charCodeAt(i);
-                            }
-                            blob = new Blob([bytes], { type: blobMimeType });
-                        } else { // outputFormat === 'normal'
-                            // If worker returned normal text, create Blob directly
-                            blob = new Blob([displayedContent], { type: blobMimeType + ';charset=utf-8' });
-                        }
-                        downloadHref = URL.createObjectURL(blob);
-                        console.log('Generated Blob URL for download:', downloadHref);
-                    } else if (selectedInputType === 'link' && resultJson.url) {
-                        // If input was a link, the worker will return a direct link to itself for on-demand serving.
-                        // We will display this link as a shareable link.
+                    // --- Unified Content Display and Blob Download Setup ---
+                    if (selectedInputType === 'link' && resultJson.url) {
+                        // For link input, display the shareable link
                         shareableLink = resultJson.url;
-                        
-                        // For the download button for link input, we need to FETCH the content from the worker's URL
-                        // and then create a Blob from it. This ensures the Blob is always created from the final processed content.
+                        linkResultContainer.classList.remove('hidden');
+                        resultLink.textContent = shareableLink;
+                        resultLink.href = shareableLink;
+
+                        // Then fetch the content from the shareable link for display and local download
                         try {
                             const contentFetchResponse = await fetch(shareableLink);
                             if (!contentFetchResponse.ok) {
-                                throw new Error(`خطا در دریافت محتوا از لینک قابل اشتراک‌گذاری برای دانلود: ${contentFetchResponse.status} - ${await contentFetchResponse.text()}`);
+                                throw new Error(`خطا در دریافت محتوا از لینک قابل اشتراک‌گذاری: ${contentFetchResponse.status} - ${await contentFetchResponse.text()}`);
                             }
                             displayedContent = await contentFetchResponse.text();
-                            
-                            let blob;
-                            let fetchedMimeType = contentFetchResponse.headers.get('Content-Type') || 'application/octet-stream';
-                            if (selectedOutputFormat === 'base64') {
-                                const binaryString = atob(displayedContent);
-                                const len = binaryString.length;
-                                const bytes = new Uint8Array(len);
-                                for (let i = 0; i < len; i++) {
-                                    bytes[i] = binaryString.charCodeAt(i);
-                                }
-                                blob = new Blob([bytes], { type: fetchedMimeType });
-                            } else {
-                                blob = new Blob([displayedContent], { type: fetchedMimeType + ';charset=utf-8' });
-                            }
-                            downloadHref = URL.createObjectURL(blob);
-                            console.log('Generated Blob URL for link download (after fetch):', downloadHref);
-
                         } catch (fetchError) {
-                            console.error('Error fetching content from shareable link for download:', fetchError);
-                            errorText.textContent = 'خطا در دریافت محتوا از لینک قابل اشتراک‌گذاری برای دانلود: ' + fetchError.message;
+                            console.error('Error fetching content from shareable link for display/download:', fetchError);
+                            errorText.textContent = 'خطا در دریافت محتوا از لینک قابل اشتراک‌گذاری: ' + fetchError.message;
                             errorMessage.classList.remove('hidden');
                             loadingMessage.classList.add('hidden');
                             resultArea.classList.add('hidden');
                             return;
                         }
-
+                    } else if (resultJson.content) {
+                        // For text/file input, directly use content from worker
+                        displayedContent = resultJson.content;
                     } else {
                         throw new Error('پاسخ نامعتبر از ورکر.');
                     }
 
-
-                    if (selectedInputType === 'link' && shareableLink) {
-                        linkResultContainer.classList.remove('hidden');
-                        resultLink.textContent = shareableLink;
-                        resultLink.href = shareableLink;
-                    } else {
-                        linkResultContainer.classList.add('hidden');
-                        resultLink.textContent = '';
-                        resultLink.href = '#';
-                    }
                     convertedContentDisplay.textContent = displayedContent;
-                    downloadButton.href = downloadHref;
 
-                    // Revoke object URL after a short delay for Blob URLs
-                    if (downloadHref.startsWith('blob:')) {
-                        const currentDownloadHref = downloadHref; // Capture current href
-                        setTimeout(() => {
-                            URL.revokeObjectURL(currentDownloadHref);
-                            console.log('Revoked Blob URL:', currentDownloadHref);
-                        }, 100); // Small delay to ensure download starts
+                    // Now, regardless of input type, use the displayedContent for local Blob download
+                    let blobMimeType = resultJson.mimeType || 'application/octet-stream';
+                    let contentForBlob = displayedContent;
+
+                    if (selectedOutputFormat === 'base64') {
+                        // If displayed content is already base64, decode it for the blob
+                        try {
+                            contentForBlob = atob(displayedContent);
+                        } catch (e) {
+                            console.warn('Displayed content is not valid Base64 for Blob decoding, using as-is:', e);
+                            // Fallback to using displayedContent directly if decoding fails
+                        }
+                        blobMimeType = blobMimeType.replace(/;charset=[^;]*/, ''); // Remove charset for binary data
+                    } else {
+                        // For normal text, ensure charset is set for Blob
+                        blobMimeType += ';charset=utf-8';
                     }
+                    
+                    // Call the unified downloadFile function
+                    downloadFile(finalDownloadFilename, contentForBlob, blobMimeType);
+
 
                 } catch (e) {
                     console.error('Error during processing or download setup:', e);
@@ -1063,33 +1029,36 @@
                 }
             });
 
-            // Add logging for download button click
-            downloadButton.addEventListener('click', (event) => {
-                console.log('Download button clicked.');
-                console.log('Download href:', downloadButton.href);
-                console.log('Download filename:', downloadButton.download);
+            // --- Unified Download File Function ---
+            function downloadFile(filename, content, mimeType) {
+                console.log('Attempting to download file:', filename);
+                console.log('Content MIME Type for Blob:', mimeType);
+                // console.log('Content for Blob:', content.substring(0, 100) + '...'); // Log first 100 chars
 
-                if (!downloadButton.href || downloadButton.href === '#') {
-                    console.error('Download failed: href is empty or invalid.');
-                    errorText.textContent = 'خطا در آماده‌سازی فایل برای دانلود. لطفاً دوباره تلاش کنید.';
+                try {
+                    const blob = new Blob([content], { type: mimeType });
+                    const url = URL.createObjectURL(blob);
+
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    link.style.display = 'none'; // Hide the link
+
+                    document.body.appendChild(link);
+                    link.click(); // Programmatically click the link
+                    document.body.removeChild(link);
+
+                    URL.revokeObjectURL(url); // Clean up the object URL
+                    console.log('File download initiated successfully via Blob.');
+                } catch (error) {
+                    console.error('Error creating or downloading Blob:', error);
+                    errorText.textContent = 'خطا در دانلود فایل: ' + error.message;
                     errorMessage.classList.remove('hidden');
-                    event.preventDefault(); // Prevent default action if href is invalid
-                } else if (downloadButton.href.startsWith('blob:')) {
-                    console.log('Attempting to download Blob URL directly.');
-                    // For Blob URLs, the browser handles the download directly.
-                    // No need to prevent default or manually click.
-                } else if (downloadButton.href.startsWith('http')) {
-                    console.error('Download failed: HTTP/HTTPS href detected. This should not happen for direct downloads.');
-                    errorText.textContent = 'خطا: لینک دانلود مستقیم نیست. لطفاً با توسعه‌دهنده تماس بگیرید.';
-                    errorMessage.classList.remove('hidden');
-                    event.preventDefault(); // Prevent default action for unexpected HTTP links
-                } else {
-                    console.warn('Unknown download href type:', downloadButton.href);
-                    errorText.textContent = 'خطای ناشناخته در لینک دانلود.';
-                    errorMessage.classList.remove('hidden');
-                    event.preventDefault(); // Prevent default action for unknown types
                 }
-            });
+            }
+
+            // Remove the old downloadButton.addEventListener as it's replaced by the unified logic
+            // downloadButton.addEventListener('click', (event) => { ... });
         });
     </script>
 </body>
