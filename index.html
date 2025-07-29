@@ -1077,12 +1077,14 @@
                     errorMessage.classList.remove('hidden');
                     event.preventDefault(); // Prevent default action if href is invalid
                 } else if (downloadButton.href.startsWith('blob:')) {
-                    console.log('Attempting to download Blob URL.');
+                    console.log('Attempting to download Blob URL directly.');
                     // For Blob URLs, the browser handles the download directly.
                     // No need to prevent default or manually click.
                 } else if (downloadButton.href.startsWith('http')) {
-                    console.log('Attempting to download from external URL (via worker).');
-                    // For HTTP/HTTPS URLs, the browser will navigate or download based on worker's headers.
+                    console.error('Download failed: HTTP/HTTPS href detected. This should not happen for direct downloads.');
+                    errorText.textContent = 'خطا: لینک دانلود مستقیم نیست. لطفاً با توسعه‌دهنده تماس بگیرید.';
+                    errorMessage.classList.remove('hidden');
+                    event.preventDefault(); // Prevent default action for unexpected HTTP links
                 } else {
                     console.warn('Unknown download href type:', downloadButton.href);
                     errorText.textContent = 'خطای ناشناخته در لینک دانلود.';
