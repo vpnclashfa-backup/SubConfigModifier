@@ -903,48 +903,74 @@
                     let displayedContent = '';
                     let downloadHref = '#';
 
-                    if (selectedInputType === 'link') {
-                        if (resultJson.url) {
-                            shareableLink = resultJson.url;
+                    // For all input types, we now get the content from resultJson.content
+                    // and handle Blob download on the client-side.
+                    if (resultJson.content) {
+                        displayedContent = resultJson.content; // This is the content from worker, either normal or base64
+                        shareableLink = ''; // No shareable link for direct text/file input
+
+                        // Create Blob for download
+                        let blob;
+                        let blobMimeType = resultJson.mimeType || 'application/octet-stream';
+
+                        if (selectedOutputFormat === 'base64') {
+                            // If worker returned base64, decode it to binary for Blob
+                            const binaryString = atob(displayedContent);
+                            const len = binaryString.length;
+                            const bytes = new Uint8Array(len);
+                            for (let i = 0; i < len; i++) {
+                                bytes[i] = binaryString.charCodeAt(i);
+                            }
+                            blob = new Blob([bytes], { type: blobMimeType });
+                        } else { // outputFormat === 'normal'
+                            // If worker returned normal text, create Blob directly
+                            blob = new Blob([displayedContent], { type: blobMimeType + ';charset=utf-8' });
+                        }
+                        downloadHref = URL.createObjectURL(blob);
+                        console.log('Generated Blob URL for download:', downloadHref);
+                    } else if (selectedInputType === 'link' && resultJson.url) {
+                        // If input was a link, the worker will return a direct link to itself for on-demand serving.
+                        // We will display this link as a shareable link.
+                        shareableLink = resultJson.url;
+                        
+                        // For the download button for link input, we need to fetch the content from the worker's URL
+                        // and then create a Blob from it.
+                        try {
                             const contentFetchResponse = await fetch(shareableLink);
                             if (!contentFetchResponse.ok) {
-                                throw new Error(`خطا در دریافت محتوا از لینک: ${contentFetchResponse.status} - ${await contentFetchResponse.text()}`);
+                                throw new Error(`خطا در دریافت محتوا از لینک قابل اشتراک‌گذاری: ${contentFetchResponse.status} - ${await contentFetchResponse.text()}`);
                             }
                             displayedContent = await contentFetchResponse.text();
-                            // For link input, the download link is the worker's URL with download=true
-                            // The worker will now handle Content-Disposition: attachment for this URL
-                            downloadHref = `${shareableLink}&download=true`; 
-                        } else {
-                            throw new Error('پاسخ نامعتبر از ورکر برای لینک.');
-                        }
-                    } else { // text or file input
-                        if (resultJson.content) {
-                            displayedContent = resultJson.content; // This is the content from worker, either normal or base64
-                            shareableLink = ''; // No shareable link for direct text/file input
-
-                            // Create Blob for download
+                            
                             let blob;
-                            let blobMimeType = resultJson.mimeType || 'application/octet-stream';
-
+                            let fetchedMimeType = contentFetchResponse.headers.get('Content-Type') || 'application/octet-stream';
                             if (selectedOutputFormat === 'base64') {
-                                // If worker returned base64, decode it to binary for Blob
                                 const binaryString = atob(displayedContent);
                                 const len = binaryString.length;
                                 const bytes = new Uint8Array(len);
                                 for (let i = 0; i < len; i++) {
                                     bytes[i] = binaryString.charCodeAt(i);
                                 }
-                                blob = new Blob([bytes], { type: blobMimeType });
-                            } else { // outputFormat === 'normal'
-                                // If worker returned normal text, create Blob directly
-                                blob = new Blob([displayedContent], { type: blobMimeType + ';charset=utf-8' });
+                                blob = new Blob([bytes], { type: fetchedMimeType });
+                            } else {
+                                blob = new Blob([displayedContent], { type: fetchedMimeType + ';charset=utf-8' });
                             }
                             downloadHref = URL.createObjectURL(blob);
-                            console.log('Generated Blob URL for download:', downloadHref);
-                        } else {
-                            throw new Error('پاسخ نامعتبر از ورکر برای متن/فایل.');
+                            console.log('Generated Blob URL for link download:', downloadHref);
+
+                        } catch (fetchError) {
+                            console.error('Error fetching content from shareable link for download:', fetchError);
+                            errorText.textContent = 'خطا در دریافت محتوا از لینک قابل اشتراک‌گذاری برای دانلود: ' + fetchError.message;
+                            errorMessage.classList.remove('hidden');
+                            loadingMessage.classList.add('hidden');
+                            resultArea.classList.add('hidden');
+                            return;
                         }
+
+                    } else {
+                        throw new Error('پاسخ نامعتبر از ورکر.');
                     }
+
 
                     if (selectedInputType === 'link' && shareableLink) {
                         linkResultContainer.classList.remove('hidden');
@@ -958,9 +984,8 @@
                     convertedContentDisplay.textContent = displayedContent;
                     downloadButton.href = downloadHref;
 
-                    // Revoke object URL after a short delay for text/file inputs
-                    // This is important to prevent memory leaks in the browser
-                    if (selectedInputType !== 'link' && downloadHref.startsWith('blob:')) {
+                    // Revoke object URL after a short delay for Blob URLs
+                    if (downloadHref.startsWith('blob:')) {
                         const currentDownloadHref = downloadHref; // Capture current href
                         setTimeout(() => {
                             URL.revokeObjectURL(currentDownloadHref);
