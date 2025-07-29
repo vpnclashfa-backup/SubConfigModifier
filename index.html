@@ -44,6 +44,7 @@
             --input-field-border: #d1d5db; /* Default for text/url/file inputs */
             --result-content-bg: #f9fafb; /* Default for converted content box */
             --result-content-border: #d1d5db; /* Default for converted content box border */
+            --dark-mode-black-text: #000000; /* Black text for specific elements in dark mode */
         }
 
         /* Dark mode styles (futuristic/neon) */
@@ -54,14 +55,14 @@
             --text-color-secondary: #e0e0e0; /* Lighter gray for better visibility */
             --border-color: #404060; /* Darker border */
             --input-bg: #2a2a4a; /* Darker, integrated input */
-            --input-border-focus: #a720e0; /* Vibrant purple/magenta */
+            --input-border-focus: #4a90e2; /* Changed to a dark blue for highlight */
             --button-primary-bg: #6a00a8; /* Deeper saturated purple */
             --button-primary-hover: #8a2be2; /* Lighter vibrant purple */
             --button-secondary-bg: #22c55e; /* Green-500 */
             --button-secondary-hover: #16a34a; /* Green-600 */
-            --blue-highlight-bg: #3a005a; /* Darker, more integrated highlight */
-            --blue-highlight-border: #a720e0; /* Vibrant highlight border */
-            --blue-highlight-text: #e0e7ff; /* Indigo-100 */
+            --blue-highlight-bg: #1a237e; /* Dark blue for highlight background */
+            --blue-highlight-border: #4a90e2; /* Medium blue for highlight border */
+            --blue-highlight-text: #e0e7ff; /* Light text on dark blue */
             --error-bg: #ef4444; /* Red-500 */
             --error-text: #fee2e2; /* Red-100 */
             --shadow-color: rgba(0, 0, 0, 0.5);
@@ -79,6 +80,8 @@
             --input-field-border: #404060; /* Darker for text/url/file inputs */
             --result-content-bg: #2a2a4a; /* Darker for converted content box */
             --result-content-border: #404060; /* Darker for converted content box border */
+            --dark-mode-black-text: #000000; /* Black text for specific elements in dark mode */
+            --input-border-focus-rgb: 74, 144, 226; /* RGB for the blue highlight */
         }
 
         body {
@@ -122,14 +125,14 @@
             border-radius: 0.75rem;
         }
         /* Updated input field styling to use new variables */
-        input[type="text"], textarea, input[type="file"] {
+        input[type="text"], textarea, input[type="file"], input[type="number"] { /* Added input[type="number"] */
             background-color: var(--input-field-bg);
             border-color: var(--input-field-border); /* Use variable for border */
             border-width: 1px; /* Ensure border is visible */
             color: var(--text-color-primary);
             transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
-        input[type="text"]:focus, textarea:focus, input[type="file"]:focus, select:focus {
+        input[type="text"]:focus, textarea:focus, input[type="file"]:focus, select:focus, input[type="number"]:focus { /* Added input[type="number"] */
             border-color: var(--input-border-focus);
             outline: none;
             box-shadow: 0 0 0 3px var(--input-border-focus), 0 0 15px var(--input-border-focus); /* Added glow */
@@ -205,9 +208,24 @@
             color: var(--blue-highlight-text);
             box-shadow: 0 0 10px rgba(var(--input-border-focus-rgb, 167, 32, 224), 0.5);
         }
+        /* Style for disabled checkboxes */
+        .checkbox-group input[type="checkbox"]:disabled + label {
+            opacity: 0.6; /* Dim disabled labels */
+            cursor: not-allowed;
+            background-color: var(--checkbox-label-bg); /* Keep base background for disabled */
+            border-color: var(--border-color); /* Keep base border for disabled */
+            color: var(--text-color-secondary); /* Dimmed text color for disabled */
+            box-shadow: none; /* No shadow for disabled */
+        }
+        .checkbox-group input[type="checkbox"]:disabled + label:hover {
+            background-color: var(--checkbox-label-bg); /* No hover effect when disabled */
+            opacity: 0.6; /* Keep dimmed opacity */
+            box-shadow: none; /* No shadow on hover when disabled */
+        }
+
 
         /* Extracting RGB for dynamic shadow */
-        [data-theme='dark'] { --input-border-focus-rgb: 167, 32, 224; }
+        [data-theme='dark'] { --input-border-focus-rgb: 74, 144, 226; } /* Updated to blue RGB */
         :root { --input-border-focus-rgb: 74, 144, 226; } /* For light mode */
 
 
@@ -244,6 +262,10 @@
             color: var(--input-border-focus); /* Ensure link color is highlight */
             background-color: var(--input-field-bg); /* Use input field background for link display */
             border: 1px solid var(--input-field-border); /* Use input field border for link display */
+        }
+        /* Specific class for dark mode black text */
+        .dark-mode-black-text {
+            color: var(--dark-mode-black-text) !important;
         }
 
 
@@ -409,13 +431,13 @@
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
                 <!-- Count Input -->
                 <div class="w-full md:w-1/2">
-                    <label for="countInput" class="block text-gray-700 text-sm font-medium mb-2">تعداد کانفیگ‌ها:</label>
+                    <label for="countInput" class="block text-gray-700 text-sm font-medium mb-2 count-label">تعداد کانفیگ‌ها:</label>
                     <div class="checkbox-group">
                         <input type="number" id="countInput" value="0" min="0" disabled
                                class="w-24 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700">
                         <input type="checkbox" id="unlimitedCount" class="hidden" checked>
                         <label for="unlimitedCount" class="flex-grow justify-center cursor-pointer py-2 px-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 text-gray-700 text-sm">
-                            نامحدود
+                            <span id="unlimitedCountLabelText">نامحدود</span>
                         </label>
                     </div>
                 </div>
@@ -602,6 +624,7 @@
             const outputFormatRadios = document.querySelectorAll('input[name="outputFormat"]'); // New
             const countInput = document.getElementById('countInput'); // New
             const unlimitedCountCheckbox = document.getElementById('unlimitedCount'); // New
+            const unlimitedCountLabelText = document.getElementById('unlimitedCountLabelText'); // New
             const protocolCheckboxes = document.querySelectorAll('input[name="protocolFilter"]'); // New
             const protocolAllCheckbox = document.getElementById('protocolAll'); // New
             const customProtocolsInput = document.getElementById('customProtocols'); // New
@@ -623,7 +646,7 @@
             const errorText = document.getElementById('errorText');
 
             const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = document = document.getElementById('themeIcon');
+            const themeIcon = document.getElementById('themeIcon');
             const tehranTimeDisplay = document.getElementById('tehranTime');
 
             // --- Theme Management ---
@@ -708,6 +731,7 @@
             // --- Config Filtering UI Logic ---
             unlimitedCountCheckbox.addEventListener('change', () => {
                 countInput.disabled = unlimitedCountCheckbox.checked;
+                unlimitedCountLabelText.textContent = unlimitedCountCheckbox.checked ? 'نامحدود' : 'محدود'; // Toggle text
                 if (unlimitedCountCheckbox.checked) {
                     countInput.value = 0; // Set to 0 for unlimited in backend
                 } else {
@@ -765,6 +789,7 @@
             unlimitedCountCheckbox.checked = true; // Default unlimited
             countInput.disabled = true; // Disable count input if unlimited is checked
             countInput.value = 0; // Set count to 0 for unlimited
+            unlimitedCountLabelText.textContent = 'نامحدود'; // Set initial text for unlimited checkbox
 
             protocolAllCheckbox.checked = true; // Default all protocols
             protocolCheckboxes.forEach(checkbox => {
@@ -882,9 +907,6 @@
                     cloudflareOnly: cloudflareOnly // New: cloudflare only filter
                 };
 
-                // Set download button properties for base64 operations
-                downloadButton.download = finalDownloadFilename;
-
                 try {
                     const workerResponse = await fetch(workerBaseUrl, {
                         method: 'POST',
@@ -907,7 +929,6 @@
 
                     let shareableLink = '';
                     let displayedContent = '';
-                    // downloadHref will be set by the downloadFile function now
 
                     // --- Unified Content Display and Blob Download Setup ---
                     if (selectedInputType === 'link' && resultJson.url) {
