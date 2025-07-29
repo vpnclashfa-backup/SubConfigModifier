@@ -578,6 +578,12 @@
         const WORKER_URL_KEY = 'cloudflare_base64_worker_url'; // Key for localStorage
         const THEME_KEY = 'app_theme'; // Key for theme preference
 
+        // Variables to store content for download button
+        let downloadContentForButton = '';
+        let downloadMimeTypeForButton = 'text/plain;charset=utf-8';
+        let downloadFilenameForButton = 'output.txt';
+
+
         document.addEventListener('DOMContentLoaded', () => {
             const workerUrlInput = document.getElementById('workerUrlInput');
             const saveWorkerUrlButton = document.getElementById('saveWorkerUrlButton');
@@ -617,7 +623,7 @@
             const errorText = document.getElementById('errorText');
 
             const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = document.getElementById('themeIcon');
+            const themeIcon = document = document.getElementById('themeIcon');
             const tehranTimeDisplay = document.getElementById('tehranTime');
 
             // --- Theme Management ---
@@ -935,26 +941,13 @@
 
                     convertedContentDisplay.textContent = displayedContent;
 
-                    // Now, regardless of input type, use the displayedContent for local Blob download
-                    let blobMimeType = resultJson.mimeType || 'application/octet-stream';
-                    let contentForBlob = displayedContent;
-
-                    if (selectedOutputFormat === 'base64') {
-                        // If displayed content is already base64, decode it for the blob
-                        try {
-                            contentForBlob = atob(displayedContent);
-                        } catch (e) {
-                            console.warn('Displayed content is not valid Base64 for Blob decoding, using as-is:', e);
-                            // Fallback to using displayedContent directly if decoding fails
-                        }
-                        blobMimeType = blobMimeType.replace(/;charset=[^;]*/, ''); // Remove charset for binary data
-                    } else {
-                        // For normal text, ensure charset is set for Blob
-                        blobMimeType += ';charset=utf-8';
+                    // Store content and mime type for the download button
+                    downloadContentForButton = displayedContent;
+                    downloadMimeTypeForButton = resultJson.mimeType || 'application/octet-stream';
+                    if (selectedOutputFormat === 'normal') {
+                        downloadMimeTypeForButton += ';charset=utf-8';
                     }
-                    
-                    // Call the unified downloadFile function
-                    downloadFile(finalDownloadFilename, contentForBlob, blobMimeType);
+                    downloadFilenameForButton = finalDownloadFilename; // Ensure filename is also stored
 
 
                 } catch (e) {
@@ -1057,8 +1050,21 @@
                 }
             }
 
-            // Remove the old downloadButton.addEventListener as it's replaced by the unified logic
-            // downloadButton.addEventListener('click', (event) => { ... });
+            // New downloadButton.addEventListener
+            downloadButton.addEventListener('click', (event) => {
+                console.log('Download button clicked.');
+                console.log('Stored download content length:', downloadContentForButton.length);
+                console.log('Stored download filename:', downloadFilenameForButton);
+                console.log('Stored download MIME type:', downloadMimeTypeForButton);
+
+                if (downloadContentForButton) {
+                    downloadFile(downloadFilenameForButton, downloadContentForButton, downloadMimeTypeForButton);
+                } else {
+                    console.error('No content available for download.');
+                    errorText.textContent = 'محتوایی برای دانلود وجود ندارد. ابتدا پردازش را انجام دهید.';
+                    errorMessage.classList.remove('hidden');
+                }
+            });
         });
     </script>
 </body>
