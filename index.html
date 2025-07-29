@@ -903,13 +903,11 @@
                     let displayedContent = '';
                     let downloadHref = '#';
 
-                    // For all input types, we now get the content from resultJson.content
-                    // and handle Blob download on the client-side.
+                    // --- Unified Blob Download Logic ---
+                    // This section now handles creating the Blob for download for ALL input types.
                     if (resultJson.content) {
                         displayedContent = resultJson.content; // This is the content from worker, either normal or base64
-                        shareableLink = ''; // No shareable link for direct text/file input
-
-                        // Create Blob for download
+                        
                         let blob;
                         let blobMimeType = resultJson.mimeType || 'application/octet-stream';
 
@@ -933,12 +931,12 @@
                         // We will display this link as a shareable link.
                         shareableLink = resultJson.url;
                         
-                        // For the download button for link input, we need to fetch the content from the worker's URL
-                        // and then create a Blob from it.
+                        // For the download button for link input, we need to FETCH the content from the worker's URL
+                        // and then create a Blob from it. This ensures the Blob is always created from the final processed content.
                         try {
                             const contentFetchResponse = await fetch(shareableLink);
                             if (!contentFetchResponse.ok) {
-                                throw new Error(`خطا در دریافت محتوا از لینک قابل اشتراک‌گذاری: ${contentFetchResponse.status} - ${await contentFetchResponse.text()}`);
+                                throw new Error(`خطا در دریافت محتوا از لینک قابل اشتراک‌گذاری برای دانلود: ${contentFetchResponse.status} - ${await contentFetchResponse.text()}`);
                             }
                             displayedContent = await contentFetchResponse.text();
                             
@@ -956,7 +954,7 @@
                                 blob = new Blob([displayedContent], { type: fetchedMimeType + ';charset=utf-8' });
                             }
                             downloadHref = URL.createObjectURL(blob);
-                            console.log('Generated Blob URL for link download:', downloadHref);
+                            console.log('Generated Blob URL for link download (after fetch):', downloadHref);
 
                         } catch (fetchError) {
                             console.error('Error fetching content from shareable link for download:', fetchError);
