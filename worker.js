@@ -1,5 +1,6 @@
 // This Cloudflare Worker processes content (link, text, or file) for Base64 operations,
-// and now also handles subscription config processing from a config.txt content.
+// and now also handles subscription config processing from a config.txt content,
+// and converts JSON formatted Shadowsocks configs to ss:// links.
 
 addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request));
@@ -39,93 +40,55 @@ async function handleRequest(request) {
         return new Response('Missing required fields (inputType, content, path, outputFormat).', { status: 400, headers });
       }
 
-      let rawContentFromInput;
-      let finalMimeType = mimeType;
+      let initialContent;
+      let finalMimeType = mimeType; // This mimeType is only for file input type
 
-      // Step 1: Get the raw content based on inputType
+      // Step 1: Get the initial content based on inputType
       if (inputType === 'link') {
-        let targetUrl = content;
-        // Convert GitHub blob URLs to raw format
-        if (targetUrl.includes('github.com') && targetUrl.includes('/blob/')) {
-          targetUrl = targetUrl
-            .replace('github.com', 'raw.githubusercontent.com')
-            .replace('/blob/', '/');
-        }
-
-        const fetchResponse = await fetch(targetUrl);
-        if (!fetchResponse.ok) {
-          return new Response(`Error fetching content from link: ${fetchResponse.status} - ${await fetchResponse.text()}`, { status: fetchResponse.status, headers });
-        }
-        rawContentFromInput = await fetchResponse.text();
-        const contentTypeHeader = fetchResponse.headers.get('Content-Type');
-        if (contentTypeHeader && !mimeType) {
-            finalMimeType = contentTypeHeader.split(';')[0];
-        } else if (!mimeType) {
-            finalMimeType = 'text/plain';
-        }
-
+        initialContent = content; // This is the URL string
       } else if (inputType === 'text') {
-        rawContentFromInput = content;
+        initialContent = content; // This is the raw text string
       } else if (inputType === 'file') {
-        rawContentFromInput = atob(content); // content is already base64 from frontend
+        initialContent = atob(content); // This is the decoded binary string from base64
       } else {
         return new Response('Invalid inputType.', { status: 400, headers });
       }
 
-      // Step 2: Auto-detect and decode Base64 input if applicable
-      let processedContent = rawContentFromInput;
-      if (js_isBase64(processedContent.trim())) {
-          try {
-              processedContent = js_decodeBase64(processedContent.trim());
-          } catch (e) {
-              // If it looks like Base64 but fails to decode, treat as plain text.
-              // This can happen if it's not a valid Base64 string for text.
-              console.warn(`Content looked like Base64 but failed to decode, treating as plain: ${e.message}`);
-          }
+      // Step 2: Recursively fetch and extract all configurations
+      // This function will handle Ssconf:// conversion, Base64 decoding, and nested fetching
+      let allExtractedConfigs = await recursivelyFetchAndExtractConfigs(initialContent, inputType);
+
+      // Step 3: Apply config filtering/shuffling based on user options
+      let currentLines = allExtractedConfigs;
+
+      // Apply protocol filter
+      if (protocols && protocols.length > 0 && !(protocols.length === 1 && protocols[0] === 'all')) {
+          const types = protocols.map(t => t.trim().toLowerCase());
+          currentLines = currentLines.filter(line => types.some(t => line.toLowerCase().startsWith(`${t}://`)));
       }
 
-      // Step 3: Apply config filtering/shuffling if options are provided
-      // Determine if config processing is desired based on parameters
-      const applyConfigProcessing = (count !== undefined && count !== null && count !== 0) || 
-                                    (protocols && protocols.length > 0 && !(protocols.length === 1 && protocols[0] === 'all')) || 
-                                    cloudflareOnly;
-
-      if (applyConfigProcessing) {
-          let currentLines = processedContent.split('\n')
-                                            .map(line => line.trim())
-                                            .filter(line => line && !line.startsWith('#'));
-          
-          // Apply protocol filter
-          if (protocols && protocols.length > 0 && !(protocols.length === 1 && protocols[0] === 'all')) {
-              const types = protocols.map(t => t.trim().toLowerCase());
-              currentLines = currentLines.filter(line => types.some(t => line.toLowerCase().startsWith(`${t}://`)));
-          }
-
-          // Apply Cloudflare filter
-          let cloudflareConfigs = [];
-          if (cloudflareOnly) {
-              cloudflareConfigs = js_identifyCloudflareDomains(currentLines);
-              currentLines = cloudflareConfigs; // If cloudflareOnly is true, only keep CF configs
-          }
-
-          js_shuffleArray(currentLines); // Shuffle lines
-
-          // Apply count limit
-          if (count !== 0 && currentLines.length > count) {
-              currentLines = currentLines.slice(0, count);
-          }
-          processedContent = currentLines.join('\r\n');
+      // Apply Cloudflare filter
+      if (cloudflareOnly) {
+          currentLines = js_identifyCloudflareDomains(currentLines);
       }
+
+      js_shuffleArray(currentLines); // Shuffle lines
+
+      // Apply count limit
+      if (count !== 0 && currentLines.length > count) {
+          currentLines = currentLines.slice(0, count);
+      }
+      let finalProcessedContent = currentLines.join('\r\n');
 
 
       // Step 4: Apply desired output format
       if (outputFormat === 'base64') {
-        processedContent = js_encodeBase64(processedContent);
+        finalProcessedContent = js_encodeBase64(finalProcessedContent);
       } else if (outputFormat !== 'normal') {
         return new Response('Invalid outputFormat. Choose "normal" or "base64".', { status: 400, headers });
       }
 
-      // Step 5: Return the result based on inputType
+      // Step 5: Return the result
       const jsonResponseHeaders = { ...headers, 'Content-Type': 'application/json' }; // Merge CORS headers
       
       if (inputType === 'link') {
@@ -135,7 +98,7 @@ async function handleRequest(request) {
         return new Response(JSON.stringify({ url: resultUrl }), { headers: jsonResponseHeaders });
       } else {
         // For text/file, return the processed content directly in the JSON response
-        return new Response(JSON.stringify({ content: processedContent, mimeType: finalMimeType }), { headers: jsonResponseHeaders });
+        return new Response(JSON.stringify({ content: finalProcessedContent, mimeType: finalMimeType }), { headers: jsonResponseHeaders });
       }
 
     } catch (error) {
@@ -143,23 +106,165 @@ async function handleRequest(request) {
       return new Response(`Internal Server Error: ${error.message}`, { status: 500, headers });
     }
   } else { // GET request for on-demand serving
-    // url is already defined and validated above
     const targetUrlParam = url.searchParams.get('url');
-    const outputFormat = url.searchParams.get('outputFormat'); // New: output format for on-demand
-    const count = parseInt(url.searchParams.get('count'), 10); // New: count for on-demand
-    const protocols = JSON.parse(decodeURIComponent(url.searchParams.get('protocols') || '[]')); // New: protocols for on-demand
-    const cloudflareOnly = url.searchParams.get('cloudflareOnly') === 'true'; // New: cloudflareOnly for on-demand
+    const outputFormat = url.searchParams.get('outputFormat');
+    const count = parseInt(url.searchParams.get('count'), 10);
+    const protocols = JSON.parse(decodeURIComponent(url.searchParams.get('protocols') || '[]'));
+    const cloudflareOnly = url.searchParams.get('cloudflareOnly') === 'true';
     const downloadFlag = url.searchParams.get('download');
     const pathFromWorkerUrl = url.pathname.substring(1);
 
     if (targetUrlParam && outputFormat) {
-      // This is a request to serve content on demand
-      return processContentOnDemand(targetUrlParam, outputFormat, count, protocols, cloudflareOnly, downloadFlag, pathFromWorkerUrl, headers); // Pass all new parameters
+      return processContentOnDemand(targetUrlParam, outputFormat, count, protocols, cloudflareOnly, downloadFlag, pathFromWorkerUrl, headers);
     } else {
       return new Response('Method Not Allowed or Missing Parameters. Use POST for processing content, or GET with url/outputFormat for on-demand serving.', { status: 405, headers });
     }
   }
 }
+
+/**
+ * Recursively fetches content from URLs (including Ssconf:// converted to https://)
+ * and extracts all valid configurations, handling Base64 decoding and JSON to ss:// conversion.
+ * It also identifies and queues new subscription-like URLs found within fetched content.
+ * @param {string} initialContent - The initial input (URL string, or raw text content).
+ * @param {string} initialType - 'link', 'text', or 'file'.
+ * @param {number} [maxDepth=3] - Maximum recursion depth for fetching nested URLs.
+ * @returns {Promise<string[]>} A promise that resolves to an array of unique extracted configuration lines.
+ */
+async function recursivelyFetchAndExtractConfigs(initialContent, initialType, maxDepth = 3) {
+    let allExtractedConfigs = new Set(); // Stores unique final configurations (e.g., vless://, ss://)
+    let urlsToProcessQueue = []; // URLs that need to be fetched and parsed
+    let visitedUrls = new Set(); // To prevent infinite loops and redundant fetches
+
+    // Helper function to process a block of text, extract configs, and find new URLs
+    async function processContentBlock(contentBlock, currentDepth) {
+        // Auto-detect and decode Base64 if applicable
+        let processedContentForJsonAndDirectLinks = contentBlock;
+        if (js_isBase64(processedContentForJsonAndDirectLinks.trim())) {
+            try {
+                processedContentForJsonAndDirectLinks = js_decodeBase64(processedContentForJsonAndDirectLinks.trim());
+            } catch (e) {
+                console.warn(`Content block looked like Base64 but failed to decode, treating as plain: ${e.message}`);
+            }
+        }
+
+        // --- Try to parse as JSON and convert to ss:// if it matches the format ---
+        try {
+            const parsedJson = JSON.parse(processedContentForJsonAndDirectLinks);
+            let configsToAdd = [];
+
+            if (Array.isArray(parsedJson)) {
+                for (const item of parsedJson) {
+                    const ssLink = js_convertJsonToSsLink(item);
+                    if (ssLink) {
+                        configsToAdd.push(ssLink);
+                    }
+                }
+            } else if (typeof parsedJson === 'object' && parsedJson !== null) {
+                const ssLink = js_convertJsonToSsLink(parsedJson);
+                if (ssLink) {
+                    configsToAdd.push(ssLink);
+                }
+            }
+            configsToAdd.forEach(link => allExtractedConfigs.add(link));
+
+        } catch (e) {
+            // Not a valid JSON or not a config JSON, proceed to other parsing
+            // console.log("Not a JSON config or invalid JSON:", e.message); // Keep this commented for production
+        }
+
+        const lines = processedContentForJsonAndDirectLinks.split('\n').map(line => line.trim()).filter(line => line);
+
+        for (const line of lines) {
+            // Check if it's an ssconf:// link specifically
+            if (line.match(/^ssconf:\/\//i)) {
+                const httpsUrl = js_replaceSsconf(line); // Convert ssconf:// to https://
+                try {
+                    const urlObj = new URL(httpsUrl); // Validate it's a valid URL after conversion
+                    if (!visitedUrls.has(urlObj.href)) {
+                        urlsToProcessQueue.push({ url: urlObj.href, depth: currentDepth + 1 });
+                        visitedUrls.add(urlObj.href);
+                    }
+                } catch (e) {
+                    console.warn(`Invalid ssconf converted URL: ${httpsUrl}, Error: ${e.message}`);
+                }
+            }
+            // Check if it's a direct config (e.g., vless://, ss://, etc.)
+            else if (line.match(/^(vless|vmess|ss|ssr|trojan|snell|mieru|anytls|hysteria|hysteria2|tuic|wireguard|ssh|juicity):\/\//i)) {
+                allExtractedConfigs.add(line);
+            }
+            // Check if it's a potential subscription URL (general HTTP/HTTPS)
+            else if (line.match(/^https?:\/\//i)) {
+                try {
+                    const url = new URL(line);
+                    // Heuristic: check for common subscription file extensions or known cloud storage domains
+                    const isSubscriptionLike = url.pathname.endsWith('.txt') || url.pathname.endsWith('.csv') ||
+                                               url.pathname.endsWith('.yaml') || url.pathname.endsWith('.yml') ||
+                                               url.hostname.includes('drive.google.com') ||
+                                               url.hostname.includes('s3.amazonaws.com') ||
+                                               url.hostname.includes('raw.githubusercontent.com') ||
+                                               url.hostname.includes('cdn.jsdelivr.net');
+
+                    if (isSubscriptionLike && !visitedUrls.has(url.href)) {
+                        urlsToProcessQueue.push({ url: url.href, depth: currentDepth + 1 });
+                        visitedUrls.add(url.href);
+                    }
+                } catch (e) {
+                    // Ignore invalid URLs
+                }
+            }
+        }
+    }
+
+    // Initial processing based on inputType
+    if (initialType === 'link') {
+        let initialUrl = initialContent; // Keep original as it might be ssconf://
+        // Convert ssconf:// to https:// for the initial link if it's ssconf://
+        if (initialUrl.match(/^ssconf:\/\//i)) {
+            initialUrl = js_replaceSsconf(initialUrl);
+        }
+        // Convert GitHub blob URLs to raw format for the initial link if it's a direct link input
+        if (initialUrl.includes('github.com') && initialUrl.includes('/blob/')) {
+            initialUrl = initialUrl
+                .replace('github.com', 'raw.githubusercontent.com')
+                .replace('/blob/', '/');
+        }
+        if (!visitedUrls.has(initialUrl)) {
+            urlsToProcessQueue.push({ url: initialUrl, depth: 0 }); // Initial depth is 0
+            visitedUrls.add(initialUrl);
+        }
+    } else { // 'text' or 'file'
+        // For text/file, process the content block directly.
+        // The processContentBlock will handle ssconf:// conversion for lines within the text.
+        await processContentBlock(initialContent, 0); // Initial depth is 0 for direct content
+    }
+
+    let currentQueueIndex = 0;
+    // Process URLs in the queue iteratively with a depth limit
+    while (currentQueueIndex < urlsToProcessQueue.length) {
+        const { url: urlToFetch, depth: currentDepth } = urlsToProcessQueue[currentQueueIndex++];
+
+        if (currentDepth >= maxDepth) {
+            console.log(`Max depth (${maxDepth}) reached for URL: ${urlToFetch}. Skipping further recursion.`);
+            continue;
+        }
+        
+        try {
+            const response = await fetch(urlToFetch);
+            if (response.ok) {
+                const fetchedContent = await response.text();
+                await processContentBlock(fetchedContent, currentDepth); // Pass currentDepth to processContentBlock
+            } else {
+                console.warn(`Failed to fetch nested URL: ${urlToFetch}, Status: ${response.status}`);
+            }
+        } catch (e) {
+            console.error(`Error fetching or processing nested URL ${urlToFetch}: ${e.message}`);
+        }
+    }
+
+    return Array.from(allExtractedConfigs); // Return unique configs as an array
+}
+
 
 // Helper functions (translated from Python script)
 
@@ -205,10 +310,53 @@ function js_shuffleArray(arr) {
     }
 }
 
+/**
+ * Replaces 'Ssconf://' with 'https://' in a string, case-insensitively.
+ * @param {string} content - The string to process.
+ * @returns {string} The processed string with replacements.
+ */
+function js_replaceSsconf(content) {
+    // Use a regular expression with 'gi' flags for global and case-insensitive replacement
+    return content.replace(/Ssconf:\/\//gi, 'https://');
+}
+
+/**
+ * Converts a JSON object representing a Shadowsocks config to an ss:// link.
+ * @param {object} jsonConfig - The parsed JSON object.
+ * @returns {string|null} The ss:// link or null if conversion fails.
+ */
+function js_convertJsonToSsLink(jsonConfig) {
+    const { method, password, server, server_port } = jsonConfig;
+
+    if (method && password && server && server_port) {
+        try {
+            const credentials = `${method}:${password}`;
+            const encodedCredentials = js_encodeBase64(credentials); // Use existing helper
+            // Ensure server_port is a number
+            const port = parseInt(server_port, 10);
+            if (isNaN(port)) {
+                console.warn(`Invalid server_port in JSON config: ${server_port}`);
+                return null;
+            }
+            // Add a default tag if not present, or use server:port
+            const tag = jsonConfig.tag || `${server}:${port}`; // Assuming 'tag' field might exist in JSON
+            // URL-encode the tag
+            const encodedTag = encodeURIComponent(tag);
+
+            return `ss://${encodedCredentials}@${server}:${port}#${encodedTag}`;
+        } catch (e) {
+            console.error(`Error converting JSON to SS link: ${e.message}`, jsonConfig);
+            return null;
+        }
+    }
+    return null; // Not a valid SS JSON config (missing required fields)
+}
+
+
 // Identifies Cloudflare Worker/Pages domains in config lines
 function js_identifyCloudflareDomains(configLines) {
     const cloudflareDomains = [".workers.dev", ".pages.dev"];
-    const identifiedConfigs = [];
+    const identifiedConfigs = new Set(); // Use a Set to avoid duplicates
 
     for (const line of configLines) {
         try {
@@ -248,14 +396,14 @@ function js_identifyCloudflareDomains(configLines) {
                         const configData = JSON.parse(decodedJsonStr);
                         
                         // For VMess: 'add' (address), 'host', 'sni'
-                        if (scheme === 'vmess') {
-                            if (configData.add) domainsToCheck.push(configData.add);
-                            if (configData.host) domainsToCheck.push(configData.host);
-                            if (configData.sni) domainsToCheck.push(configData.sni);
-                        }
+                        if (configData.add) domainsToCheck.push(configData.add);
+                        if (configData.host) domainsToCheck.push(configData.host);
+                        if (configData.sni) domainsToCheck.push(configData.sni);
+                        
                         // For SS: usually 'server' (though SS uses JSON less frequently)
-                        else if (scheme === 'ss') {
+                        if (scheme === 'ss') { // Check for SS specific fields within decoded JSON
                             if (configData.server) domainsToCheck.push(configData.server);
+                            // SS links can also have 'host' or 'sni' in their JSON, depending on transport
                             if (configData.host) domainsToCheck.push(configData.host);
                             if (configData.sni) domainsToCheck.push(configData.sni);
                         }
@@ -274,7 +422,7 @@ function js_identifyCloudflareDomains(configLines) {
                 }
                 
                 if (cloudflareDomains.some(cf_domain => domain.toLowerCase().endsWith(cf_domain))) {
-                    identifiedConfigs.push(line);
+                    identifiedConfigs.add(line);
                     break; // Found a Cloudflare domain, move to next line
                 }
             }
@@ -285,92 +433,55 @@ function js_identifyCloudflareDomains(configLines) {
             continue;
         }
     }
-    return identifiedConfigs;
+    return Array.from(identifiedConfigs); // Return unique configs as an array
 }
 
 // Handles GET requests to serve content on demand (existing functionality, updated for new params)
 async function processContentOnDemand(targetUrlParam, outputFormat, count, protocols, cloudflareOnly, downloadFlag, pathFromWorkerUrl, corsHeaders) {
-  let finalTargetUrl = targetUrlParam;
-  if (finalTargetUrl.includes('github.com') && finalTargetUrl.includes('/blob/')) {
-    finalTargetUrl = finalTargetUrl
-      .replace('github.com', 'raw.githubusercontent.com')
-      .replace('/blob/', '/');
-  }
-
-  let content;
-  let mimeType = 'text/plain';
+  let initialContent = targetUrlParam; // The URL to fetch
   let filename = pathFromWorkerUrl || 'download';
 
-  try {
-    const fetchResponse = await fetch(finalTargetUrl);
-    if (!fetchResponse.ok) {
-      return new Response(`Error fetching content: ${fetchResponse.status} - ${await fetchResponse.text()}`, { status: fetchResponse.status, headers: corsHeaders });
-    }
-    content = await fetchResponse.text();
-    const contentTypeHeader = fetchResponse.headers.get('Content-Type');
-    if (contentTypeHeader) {
-        mimeType = contentTypeHeader.split(';')[0];
-    }
-    try {
-        const originalUrlObj = new URL(targetUrlParam);
-        const pathSegments = originalUrlObj.pathname.split('/');
-        const lastSegment = pathSegments[pathSegments.length - 1];
-        if (lastSegment && lastSegment.includes('.')) {
-            filename = lastSegment;
-        }
-    } catch (e) {
-        // Ignore URL parsing errors
-    }
+  // Recursively fetch and extract all configurations
+  let allExtractedConfigs = await recursivelyFetchAndExtractConfigs(initialContent, 'link');
 
-  } catch (error) {
-    return new Response(`Error fetching content: ${error.message}`, { status: 500, headers: corsHeaders });
+  let currentLines = allExtractedConfigs;
+  
+  // Apply protocol filter
+  if (protocols && protocols.length > 0 && !(protocols.length === 1 && protocols[0] === 'all')) {
+      const types = protocols.map(t => t.trim().toLowerCase());
+      currentLines = currentLines.filter(line => types.some(t => line.toLowerCase().startsWith(`${t}://`)));
   }
 
-  // Auto-detect and decode Base64 input if applicable
-  let processedContent = content;
-  if (js_isBase64(processedContent.trim())) {
-      try {
-          processedContent = js_decodeBase64(processedContent.trim());
-      } catch (e) {
-          console.warn(`Content looked like Base64 but failed to decode on-demand, treating as plain: ${e.message}`);
+  // Apply Cloudflare filter
+  if (cloudflareOnly) {
+      currentLines = js_identifyCloudflareDomains(currentLines);
+  }
+
+  js_shuffleArray(currentLines); // Shuffle lines
+
+  // Apply count limit
+  if (count !== 0 && currentLines.length > count) {
+      currentLines = currentLines.slice(0, count);
+  }
+  let finalProcessedContent = currentLines.join('\r\n');
+
+  // Determine MIME type for the response
+  let mimeType = 'text/plain'; // Default to text/plain
+  if (outputFormat === 'base64') {
+      mimeType = 'text/plain'; // Base64 is still text
+  } else {
+      // Try to infer from filename if it has a common config extension
+      if (filename.endsWith('.txt') || filename.endsWith('.csv') || filename.endsWith('.yaml') || filename.endsWith('.yml')) {
+          mimeType = 'text/plain'; // Or more specific like text/csv, application/x-yaml
+      } else {
+          mimeType = 'application/octet-stream'; // Generic binary for unknown types
       }
   }
 
-  // Apply config filtering/shuffling if options are provided
-  const applyConfigProcessing = (count !== undefined && count !== null && count !== 0) || 
-                                (protocols && protocols.length > 0 && !(protocols.length === 1 && protocols[0] === 'all')) || 
-                                cloudflareOnly;
-
-  if (applyConfigProcessing) {
-      let currentLines = processedContent.split('\n')
-                                        .map(line => line.trim())
-                                        .filter(line => line && !line.startsWith('#'));
-      
-      // Apply protocol filter
-      if (protocols && protocols.length > 0 && !(protocols.length === 1 && protocols[0] === 'all')) {
-          const types = protocols.map(t => t.trim().toLowerCase());
-          currentLines = currentLines.filter(line => types.some(t => line.toLowerCase().startsWith(`${t}://`)));
-      }
-
-      // Apply Cloudflare filter
-      let cloudflareConfigs = [];
-      if (cloudflareOnly) {
-          cloudflareConfigs = js_identifyCloudflareDomains(currentLines);
-          currentLines = cloudflareConfigs; // If cloudflareOnly is true, only keep CF configs
-      }
-
-      js_shuffleArray(currentLines); // Shuffle lines
-
-      // Apply count limit
-      if (count !== 0 && currentLines.length > count) {
-          currentLines = currentLines.slice(0, count);
-      }
-      processedContent = currentLines.join('\r\n');
-  }
 
   // Apply desired output format
   if (outputFormat === 'base64') {
-    processedContent = js_encodeBase64(processedContent);
+    finalProcessedContent = js_encodeBase64(finalProcessedContent);
   } else if (outputFormat !== 'normal') {
     return new Response('Invalid outputFormat.', { status: 400, headers: corsHeaders });
   }
@@ -385,5 +496,5 @@ async function processContentOnDemand(targetUrlParam, outputFormat, count, proto
     finalHeaders['Content-Disposition'] = `attachment; filename="${filename}"`;
   }
 
-  return new Response(processedContent, { headers: finalHeaders });
+  return new Response(finalProcessedContent, { headers: finalHeaders });
 }
