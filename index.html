@@ -4,414 +4,88 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مدیریت و تبدیل کانفیگ‌های اشتراک</title>
-    <!-- Favicon for Base64 operations (arrows symbolizing encode/decode) -->
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%236366F1' d='M10 16.5V7.5L16 12L10 16.5ZM14 7.5L8 12L14 16.5V7.5Z'/%3E%3C/svg%3E">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts - Vazirmatn -->
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* Base styles for light mode (more vibrant) */
         :root {
-            --bg-color: #f8f8ff; /* Ghost White */
-            --container-bg: #ffffff;
-            --text-color-primary: #333333;
-            --text-color-secondary: #666666;
-            --border-color: #d1d5db; /* Light gray */
-            --input-bg: #f9fafb; /* Lighter gray */
-            --input-border-focus: #4a90e2; /* Light blue */
-            --button-primary-bg: #3f51b5; /* Indigo */
-            --button-primary-hover: #303f9f; /* Darker Indigo */
-            --button-secondary-bg: #4ade80; /* Green */
-            --button-secondary-hover: #22c55e; /* Darker Green */
-            --blue-highlight-bg: #e3f2fd; /* Light Blue */
-            --blue-highlight-border: #90caf9; /* Medium Blue */
-            --blue-highlight-text: #1a237e; /* Dark Blue */
-            --error-bg: #fee2e2; /* Red-100 */
-            --error-text: #ef4444; /* Red-500 */
-            --shadow-color: rgba(0, 0, 0, 0.15);
-            --shadow-color-light: rgba(0, 0, 0, 0.08);
-            --gradient-start: #4a90e2; /* Light blue */
-            --gradient-end: #3f51b5; /* Indigo */
-            /* New variables for specific backgrounds */
-            --worker-url-bg: #e3f2fd; /* Light Blue */
-            --config-filter-bg: #f3f4f6; /* Light Gray */
-            --worker-url-border: #90caf9; /* Medium Blue */
-            --config-filter-border: #d1d5db; /* Light Gray */
-            --checkbox-label-bg: #ffffff; /* Default white for checkbox labels */
-            --checkbox-label-hover-bg: #f3f4f6; /* Light gray for hover */
-            --input-field-bg: #f9fafb; /* Default for text/url/file inputs */
-            --input-field-border: #d1d5db; /* Default for text/url/file inputs */
-            --result-content-bg: #f9fafb; /* Default for converted content box */
-            --result-content-border: #d1d5db; /* Default for converted content box border */
-            --dark-mode-black-text: #000000; /* Black text for specific elements in dark mode */
-            --social-icon-bg: transparent; /* Default transparent for social icons */
-            --social-icon-hover-bg: rgba(0, 0, 0, 0.05); /* Light hover for social icons */
+            --bg-color: #f8f8ff; --container-bg: #ffffff; --text-color-primary: #333333; --text-color-secondary: #666666; --border-color: #d1d5db; --input-bg: #f9fafb; --input-border-focus: #4a90e2; --button-primary-bg: #3f51b5; --button-primary-hover: #303f9f; --button-secondary-bg: #4ade80; --button-secondary-hover: #22c55e; --blue-highlight-bg: #e3f2fd; --blue-highlight-border: #90caf9; --blue-highlight-text: #1a237e; --error-bg: #fee2e2; --error-text: #ef4444; --shadow-color: rgba(0, 0, 0, 0.15); --shadow-color-light: rgba(0, 0, 0, 0.08); --gradient-start: #4a90e2; --gradient-end: #3f51b5; --worker-url-bg: #e3f2fd; --config-filter-bg: #f3f4f6; --worker-url-border: #90caf9; --config-filter-border: #d1d5db; --checkbox-label-bg: #ffffff; --checkbox-label-hover-bg: #f3f4f6; --input-field-bg: #f9fafb; --input-field-border: #d1d5db; --result-content-bg: #f9fafb; --result-content-border: #d1d5db;
         }
-
-        /* Dark mode styles (futuristic/neon) */
         [data-theme='dark'] {
-            --bg-color: #0a0a1a; /* Very deep blue/purple */
-            --container-bg: #1a1a3a; /* Darker blue-gray */
-            --text-color-primary: #ffffff; /* Even brighter white for better visibility */
-            --text-color-secondary: #e0e0e0; /* Lighter gray for better visibility */
-            --border-color: #404060; /* Darker border */
-            --input-bg: #2a2a4a; /* Darker, integrated input */
-            --input-border-focus: #4a90e2; /* Changed to a dark blue for highlight */
-            --button-primary-bg: #6a00a8; /* Deeper saturated purple */
-            --button-primary-hover: #8a2be2; /* Lighter vibrant purple */
-            --button-secondary-bg: #22c55e; /* Green-500 */
-            --button-secondary-hover: #16a34a; /* Green-600 */
-            --blue-highlight-bg: #1a237e; /* Dark blue for highlight background */
-            --blue-highlight-border: #4a90e2; /* Medium blue for highlight border */
-            --blue-highlight-text: #e0e7ff; /* Light text on dark blue */
-            --error-bg: #ef4444; /* Red-500 */
-            --error-text: #fee2e2; /* Red-100 */
-            --shadow-color: rgba(0, 0, 0, 0.5);
-            --shadow-color-light: rgba(0, 0, 0, 0.3);
-            --gradient-start: #4d0080; /* Purple-800 */
-            --gradient-end: #8000ff; /* Violet-700 */
-            /* Dark mode specific backgrounds */
-            --worker-url-bg: #1f1f3f; /* Darker shade for worker URL box */
-            --config-filter-bg: #1f1f3f; /* Darker shade for config filter box */
-            --worker-url-border: #404060; /* Darker border for worker URL box */
-            --config-filter-border: #404060; /* Darker border for config filter box */
-            --checkbox-label-bg: #2a2a4a; /* Darker background for checkbox labels */
-            --checkbox-label-hover-bg: #3a3a5a; /* Even darker for hover */
-            --input-field-bg: #2a2a4a; /* Darker for text/url/file inputs */
-            --input-field-border: #404060; /* Darker for text/url/file inputs */
-            --result-content-bg: #2a2a4a; /* Darker for converted content box */
-            --result-content-border: #404060; /* Darker for converted content box border */
-            --dark-mode-black-text: #000000; /* Black text for specific elements in dark mode */
-            --social-icon-bg: rgba(255, 255, 255, 0.05); /* Slightly visible background for social icons */
-            --social-icon-hover-bg: rgba(255, 255, 255, 0.1); /* Lighter hover for social icons */
+            --bg-color: #0a0a1a; --container-bg: #1a1a3a; --text-color-primary: #ffffff; --text-color-secondary: #e0e0e0; --border-color: #404060; --input-bg: #2a2a4a; --input-border-focus: #4a90e2; --button-primary-bg: #6a00a8; --button-primary-hover: #8a2be2; --button-secondary-bg: #22c55e; --button-secondary-hover: #16a34a; --blue-highlight-bg: #1a237e; --blue-highlight-border: #4a90e2; --blue-highlight-text: #e0e7ff; --error-bg: #ef4444; --error-text: #fee2e2; --shadow-color: rgba(0, 0, 0, 0.5); --shadow-color-light: rgba(0, 0, 0, 0.3); --gradient-start: #4d0080; --gradient-end: #8000ff; --worker-url-bg: #1f1f3f; --config-filter-bg: #1f1f3f; --worker-url-border: #404060; --config-filter-border: #404060; --checkbox-label-bg: #2a2a4a; --checkbox-label-hover-bg: #3a3a5a; --input-field-bg: #2a2a4a; --input-field-border: #404060; --result-content-bg: #2a2a4a; --result-content-border: #404060;
         }
-
-        body {
-            font-family: 'Vazirmatn', sans-serif;
-            background-color: var(--bg-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 1rem;
-            box-sizing: border-box;
-            transition: background-color 0.5s ease; /* Smooth theme transition */
-        }
-        .container {
-            background-color: var(--container-bg);
-            border-radius: 1.5rem;
-            box-shadow: 0 20px 25px -5px var(--shadow-color), 0 8px 10px -6px var(--shadow-color-light);
-            padding: 2.5rem;
-            width: 100%;
-            max-width: 500px;
-            text-align: center;
-            border: 1px solid var(--border-color);
-            transition: background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
-            position: relative; /* For absolute positioning of theme toggle */
-        }
-        h1, p, label, .result-area, .footer-time {
-            color: var(--text-color-primary);
-            transition: color 0.5s ease;
-        }
-        /* Override specific text colors that might be hardcoded by Tailwind */
-        .text-gray-600 { color: var(--text-color-secondary) !important; }
-        .text-gray-700 { color: var(--text-color-primary) !important; }
-        .text-gray-800 { color: var(--text-color-primary) !important; }
-        .text-gray-500 { color: var(--text-color-secondary) !important; }
-        .text-indigo-600 { color: var(--input-border-focus) !important; } /* For links */
-        .text-blue-700 { color: var(--blue-highlight-text) !important; } /* For worker URL label */
-
-
-        input[type="text"], textarea, input[type="file"], button, select {
-            border-radius: 0.75rem;
-        }
-        /* Updated input field styling to use new variables */
-        input[type="text"], textarea, input[type="file"], input[type="number"] { /* Added input[type="number"] */
-            background-color: var(--input-field-bg);
-            border-color: var(--input-field-border); /* Use variable for border */
-            border-width: 1px; /* Ensure border is visible */
-            color: var(--text-color-primary);
-            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-        }
-        input[type="text"]:focus, textarea:focus, input[type="file"]:focus, select:focus, input[type="number"]:focus { /* Added input[type="number"] */
-            border-color: var(--input-border-focus);
-            outline: none;
-            box-shadow: 0 0 0 3px var(--input-border-focus), 0 0 15px var(--input-border-focus); /* Added glow */
-        }
-        /* Placeholder styling */
-        input::placeholder, textarea::placeholder {
-            color: var(--text-color-secondary);
-            opacity: 0.7;
-        }
-        [data-theme='dark'] input::placeholder, [data-theme='dark'] textarea::placeholder {
-            color: var(--text-color-secondary);
-            opacity: 0.5;
-        }
-
-        button {
-            transition: all 0.3s ease-in-out;
-            transform: translateY(0);
-            background-image: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
-            color: white;
-            border: none;
-            font-weight: 700; /* Bold buttons */
-            padding: 0.75rem 1.5rem; /* More padding */
-        }
-        button:hover {
-            transform: translateY(-3px); /* Slightly more lift */
-            box-shadow: 0 6px 12px -2px var(--shadow-color), 0 3px 6px -1px var(--shadow-color-light), 0 0 20px var(--input-border-focus); /* Enhanced glow on hover */
-            opacity: 1; /* Ensure full opacity */
-        }
-        .radio-group label, .input-type-selector label {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            border-radius: 0.75rem;
-            border: 2px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.3s ease-in-out;
-            background-color: var(--input-bg); /* Now uses input-bg for consistency */
-            color: var(--text-color-primary);
-            font-weight: 500; /* Medium weight for labels */
-        }
-        .radio-group input[type="radio"]:checked + label, .input-type-selector input[type="radio"]:checked + label {
-            border-color: var(--input-border-focus);
-            background-color: var(--blue-highlight-bg);
-            color: var(--blue-highlight-text);
-            box-shadow: 0 0 10px rgba(var(--input-border-focus-rgb, 167, 32, 224), 0.5); /* Subtle glow on checked */
-        }
-        .radio-group label:hover, .input-type-selector label:hover {
-            background-color: var(--checkbox-label-hover-bg); /* Use checkbox-label-hover-bg for consistency */
-            opacity: 0.95;
-            box-shadow: 0 0 8px rgba(var(--input-border-focus-rgb, 167, 32, 224), 0.3);
-        }
-        /* Specific styling for checkbox labels (unlimited, cloudflare, protocols) */
-        .checkbox-group label {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            border-radius: 0.75rem;
-            border: 2px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.3s ease-in-out;
-            background-color: var(--checkbox-label-bg); /* Use new variable */
-            color: var(--text-color-primary);
-            font-weight: 500;
-        }
-        .checkbox-group label:hover {
-            background-color: var(--checkbox-label-hover-bg); /* Use new variable */
-            opacity: 0.95;
-            box-shadow: 0 0 8px rgba(var(--input-border-focus-rgb, 167, 32, 224), 0.3);
-        }
-        .checkbox-group input[type="checkbox"]:checked + label {
-            border-color: var(--input-border-focus);
-            background-color: var(--blue-highlight-bg);
-            color: var(--blue-highlight-text);
-            box-shadow: 0 0 10px rgba(var(--input-border-focus-rgb, 167, 32, 224), 0.5);
-        }
-        /* Style for disabled checkboxes */
-        .checkbox-group input[type="checkbox"]:disabled + label {
-            opacity: 0.6; /* Dim disabled labels */
-            cursor: not-allowed;
-            background-color: var(--checkbox-label-bg); /* Keep base background for disabled */
-            border-color: var(--border-color); /* Keep base border for disabled */
-            color: var(--text-color-secondary); /* Dimmed text color for disabled */
-            box-shadow: none; /* No shadow for disabled */
-        }
-        .checkbox-group input[type="checkbox"]:disabled + label:hover {
-            background-color: var(--checkbox-label-bg); /* No hover effect when disabled */
-            opacity: 0.6; /* Keep dimmed opacity */
-            box-shadow: none; /* No shadow on hover when disabled */
-        }
-
-
-        /* Extracting RGB for dynamic shadow */
-        [data-theme='dark'] { --input-border-focus-rgb: 74, 144, 226; } /* Updated to blue RGB */
-        :root { --input-border-focus-rgb: 74, 144, 226; } /* For light mode */
-
-
-        /* Specific styling for result areas */
-        .result-area-container {
-            background-color: var(--result-content-bg); /* Use new variable */
-            border: 1px solid var(--result-content-border); /* Use new variable */
-        }
-        .result-area {
-            overflow-wrap: break-word; /* Better word breaking */
-            text-align: left;
-            direction: ltr;
-            overflow-x: auto;
-            /* Removed background-color and border from here */
-            color: var(--text-color-primary);
-            padding: 1rem; /* More padding */
-            border-radius: 0.75rem; /* Consistent border radius */
-        }
-        #convertedContentDisplay {
-            max-height: 6em; /* Approximately 4 lines of text (1.5em line-height * 4 lines) */
-            overflow-y: auto; /* Enable vertical scrolling if content exceeds max-height */
-            white-space: pre-wrap; /* Preserve whitespace and allow wrapping */
-            font-family: 'Vazirmatn', monospace; /* Use monospace for code-like content */
-            color: var(--text-color-primary); /* Ensure text color is primary */
-            background-color: var(--input-field-bg); /* Use input field background for content display */
-            border: 1px solid var(--input-field-border); /* Use input field border for content display */
-        }
-        #resultLink {
-            white-space: nowrap; /* Prevent line breaks */
-            overflow: hidden; /* Hide overflowing content */
-            text-overflow: ellipsis; /* Show ellipsis for overflow */
-            display: block; /* Ensure it takes full width for ellipsis */
-            padding: 0.5rem; /* Add padding to the link box */
-            color: var(--input-border-focus); /* Ensure link color is highlight */
-            background-color: var(--input-field-bg); /* Use input field background for link display */
-            border: 1px solid var(--input-field-border); /* Use input field border for link display */
-        }
-        /* Specific class for dark mode black text */
-        .dark-mode-black-text {
-            color: var(--dark-mode-black-text) !important;
-        }
-
-        /* Social icons styling */
-        .social-icons-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 1rem; /* Space between icons */
-            margin-top: 2rem; /* Space from content above */
-            padding: 1rem;
-            border-radius: 0.75rem;
-            background-color: var(--config-filter-bg); /* Use a consistent background */
-            border: 1px solid var(--config-filter-border); /* Consistent border */
-        }
-        .social-icons-container a {
-            display: block;
-            width: 48px; /* Adjust size as needed */
-            height: 48px;
-            border-radius: 50%; /* Make them circular */
-            overflow: hidden; /* Hide parts of GIF outside circle */
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            background-color: var(--social-icon-bg); /* Use variable for background */
-        }
-        .social-icons-container a:hover {
-            transform: scale(1.1); /* Slightly enlarge on hover */
-            box-shadow: 0 0 15px rgba(var(--input-border-focus-rgb), 0.5); /* Glow on hover */
-            background-color: var(--social-icon-hover-bg); /* Use variable for hover background */
-        }
-        .social-icons-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* Ensure image covers the circle */
-        }
-
-
-        .bg-red-100 { background-color: var(--error-bg); }
-        .text-red-700 { color: var(--error-text); }
-        .bg-blue-50 { background-color: var(--blue-highlight-bg); }
-        .border-blue-200 { border-color: var(--blue-highlight-border); }
-
-
-        /* Theme Toggle specific styles */
-        .theme-toggle {
-            position: absolute;
-            top: 1.5rem;
-            left: 1.5rem;
-            cursor: pointer;
-            font-size: 1.5rem;
-            color: var(--text-color-secondary);
-            transition: color 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .theme-toggle:hover {
-            color: var(--text-color-primary);
-        }
-        .theme-toggle input[type="checkbox"] {
-            display: none;
-        }
-        .theme-toggle .slider {
-            position: relative;
-            width: 40px;
-            height: 20px;
-            background-color: var(--border-color);
-            border-radius: 20px;
-            transition: background-color 0.3s;
-        }
-        .theme-toggle .slider:before {
-            content: "";
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background-color: white;
-            top: 2px;
-            left: 2px;
-            transition: transform 0.3s, background-color 0.3s;
-        }
-        .theme-toggle input:checked + .slider {
-            background-color: var(--button-primary-bg);
-        }
-        .theme-toggle input:checked + .slider:before {
-            transform: translateX(20px);
-        }
-
-        /* Footer for Time Display */
-        .footer-time {
-            position: absolute;
-            bottom: 1rem;
-            right: 1.5rem;
-            font-size: 0.875rem; /* text-sm */
-            color: var(--text-color-secondary);
-            direction: ltr; /* Ensure time is LTR */
-        }
+        body { font-family: 'Vazirmatn', sans-serif; background-color: var(--bg-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 1rem; box-sizing: border-box; transition: background-color 0.5s ease; }
+        .container { background-color: var(--container-bg); border-radius: 1.5rem; box-shadow: 0 20px 25px -5px var(--shadow-color), 0 8px 10px -6px var(--shadow-color-light); padding: 2.5rem; width: 100%; max-width: 500px; text-align: center; border: 1px solid var(--border-color); transition: background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease; position: relative; }
+        h1, p, label, .result-area, .footer-time { color: var(--text-color-primary); transition: color 0.5s ease; }
+        .text-gray-600 { color: var(--text-color-secondary) !important; } .text-gray-700, .text-gray-800 { color: var(--text-color-primary) !important; } .text-gray-500 { color: var(--text-color-secondary) !important; } .text-indigo-600, .text-blue-700 { color: var(--blue-highlight-text) !important; }
+        input[type="text"], textarea, input[type="file"], input[type="number"] { background-color: var(--input-field-bg); border-color: var(--input-field-border); border-width: 1px; color: var(--text-color-primary); transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; border-radius: 0.75rem; }
+        input[type="text"]:focus, textarea:focus, input[type="file"]:focus, input[type="number"]:focus { border-color: var(--input-border-focus); outline: none; box-shadow: 0 0 0 3px var(--input-border-focus), 0 0 15px var(--input-border-focus); }
+        input::placeholder, textarea::placeholder { color: var(--text-color-secondary); opacity: 0.7; }
+        [data-theme='dark'] input::placeholder, [data-theme='dark'] textarea::placeholder { opacity: 0.5; }
+        button { transition: all 0.3s ease-in-out; transform: translateY(0); background-image: linear-gradient(to right, var(--gradient-start), var(--gradient-end)); color: white; border: none; font-weight: 700; padding: 0.75rem 1.5rem; border-radius: 0.75rem; }
+        button:hover { transform: translateY(-3px); box-shadow: 0 6px 12px -2px var(--shadow-color), 0 3px 6px -1px var(--shadow-color-light), 0 0 20px var(--input-border-focus); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: translateY(0); box-shadow: none; }
+        .radio-group label, .checkbox-group label { display: flex; align-items: center; padding: 0.75rem 1rem; border-radius: 0.75rem; border: 2px solid var(--border-color); cursor: pointer; transition: all 0.3s ease-in-out; background-color: var(--checkbox-label-bg); color: var(--text-color-primary); font-weight: 500; }
+        .radio-group label:hover, .checkbox-group label:hover { background-color: var(--checkbox-label-hover-bg); }
+        .radio-group input:checked + label, .checkbox-group input:checked + label { border-color: var(--input-border-focus); background-color: var(--blue-highlight-bg); color: var(--blue-highlight-text); }
+        .checkbox-group input:disabled + label { opacity: 0.6; cursor: not-allowed; box-shadow: none; } .checkbox-group input:disabled + label:hover { background-color: var(--checkbox-label-bg); }
+        #convertedContentDisplay { max-height: 6em; overflow-y: auto; white-space: pre-wrap; font-family: 'Vazirmatn', monospace; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); }
+        #resultLink { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; padding: 0.5rem; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); }
+        .theme-toggle { position: absolute; top: 1.5rem; left: 1.5rem; cursor: pointer; }
+        .footer-time { position: absolute; bottom: 1rem; right: 1.5rem; font-size: 0.875rem; color: var(--text-color-secondary); direction: ltr; }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Theme Toggle -->
         <label class="theme-toggle">
-            <input type="checkbox" id="themeToggle">
-            <span class="slider"></span>
-            <span id="themeIcon">☀️</span> <!-- Sun/Moon emoji -->
+            <input type="checkbox" id="themeToggle" class="hidden">
+            <span id="themeIcon" class="text-2xl">☀️</span>
         </label>
 
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">مدیریت و تبدیل کانفیگ‌های اشتراک</h1>
+        <h1 class="text-3xl font-bold mb-6">مدیریت و تبدیل کانفیگ</h1>
         <p class="text-gray-600 mb-8">نوع ورودی و عملیات تبدیل را انتخاب کنید.</p>
 
         <!-- Worker URL Configuration -->
-        <div class="mb-6 p-4 rounded-lg worker-url-box border">
-            <label for="workerUrlInput" class="block text-blue-700 text-right text-sm font-medium mb-2">آدرس ورکر کلادفلر شما:</label>
-            <input type="text" id="workerUrlInput" placeholder="مثال: https://my-worker.yourusername.workers.dev"
+        <div class="mb-6 p-4 rounded-lg border" style="border-color: var(--worker-url-border); background-color: var(--worker-url-bg);">
+            <label for="processorWorkerInput" class="block text-blue-700 text-right text-sm font-medium mb-2">آدرس ورکر پردازشگر:</label>
+            <div id="suggestedWorkerMessage" class="text-xs text-blue-600 bg-blue-100 p-2 rounded-md mb-2 hidden text-center">
+                💡 از یک ورکر عمومی اهدایی استفاده می‌کنید. می‌توانید آن را با ورکر شخصی خود جایگزین کرده و ذخیره کنید.
+            </div>
+            <input type="text" id="processorWorkerInput" placeholder="در حال یافتن ورکر عمومی..."
                    class="w-full px-4 py-3 border border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-blue-700">
             <button id="saveWorkerUrlButton"
                     class="mt-3 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                ذخیره آدرس ورکر
+                ذخیره آدرس شخصی
             </button>
-            <div id="workerUrlMessage" class="text-green-600 text-sm mt-2 hidden">آدرس ورکر ذخیره شد!</div>
+            <div id="workerUrlMessage" class="text-green-600 text-sm mt-2 hidden"></div>
+        </div>
+        
+        <!-- Donate Worker Section -->
+        <div class="mb-6 p-4 rounded-lg border" style="background-color: var(--config-filter-bg); border-color: var(--config-filter-border);">
+            <label for="donateWorkerInput" class="block text-right text-sm font-medium mb-2">می‌خواهید یک ورکر عمومی اهدا کنید؟</label>
+            <p class="text-xs text-right mb-3 text-gray-500">ورکر شما به صورت خودکار تست شده و در صورت تایید به لیست عمومی اضافه می‌شود.</p>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <input type="text" id="donateWorkerInput" placeholder="آدرس ورکر پردازشگر شما..."
+                       class="flex-grow w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button id="donateWorkerButton"
+                        class="bg-indigo-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    اهدا و تست خودکار
+                </button>
+            </div>
+            <div id="donateWorkerMessage" class="text-sm mt-2 hidden text-center"></div>
         </div>
 
         <!-- Input Type Selection -->
         <div class="mb-6">
             <label class="block text-gray-700 text-right text-sm font-medium mb-2">نوع ورودی:</label>
             <div class="input-type-selector radio-group grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                    <input type="radio" id="inputTypeLink" name="inputType" value="link" class="hidden" checked>
-                    <label for="inputTypeLink" class="flex-grow justify-center">
-                        <span class="text-base">لینک</span>
-                    </label>
-                </div>
-                <div>
-                    <input type="radio" id="inputTypeText" name="inputType" value="text" class="hidden">
-                    <label for="inputTypeText" class="flex-grow justify-center">
-                        <span class="text-base">متن</span>
-                    </label>
-                </div>
-                <div>
-                    <input type="radio" id="inputTypeFile" name="inputType" value="file" class="hidden">
-                    <label for="inputTypeFile" class="flex-grow justify-center">
-                        <span class="text-base">فایل</span>
-                    </label>
-                </div>
+                <div> <input type="radio" id="inputTypeLink" name="inputType" value="link" class="hidden" checked> <label for="inputTypeLink" class="flex-grow justify-center"><span class="text-base">لینک</span></label> </div>
+                <div> <input type="radio" id="inputTypeText" name="inputType" value="text" class="hidden"> <label for="inputTypeText" class="flex-grow justify-center"><span class="text-base">متن</span></label> </div>
+                <div> <input type="radio" id="inputTypeFile" name="inputType" value="file" class="hidden"> <label for="inputTypeFile" class="flex-grow justify-center"><span class="text-base">فایل</span></label> </div>
             </div>
         </div>
 
@@ -419,730 +93,237 @@
         <div id="inputContainer" class="mb-6">
             <div id="linkInputContainer">
                 <label for="urlInput" class="block text-gray-700 text-right text-sm font-medium mb-2">لینک اشتراک ورودی:</label>
-                <input type="text" id="urlInput" placeholder="مثال: https://raw.githubusercontent.com/maimengmeng/mysub/refs/heads/main/valid_content_all.txt"
-                       class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700">
+                <input type="text" id="urlInput" placeholder="مثال: https://raw.githubusercontent.com/maimengmeng/mysub/refs/heads/main/valid_content_all.txt" class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700">
             </div>
             <div id="textInputContainer" class="hidden">
                 <label for="textInput" class="block text-gray-700 text-right text-sm font-medium mb-2">متن مورد نظر:</label>
-                <textarea id="textInput" rows="6" placeholder="متن خود را اینجا وارد کنید..."
-                          class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700"></textarea>
+                <textarea id="textInput" rows="6" placeholder="متن خود را اینجا وارد کنید..." class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700"></textarea>
             </div>
             <div id="fileInputContainer" class="hidden">
                 <label for="fileInput" class="block text-gray-700 text-right text-sm font-medium mb-2">فایل مورد نظر:</label>
-                <input type="file" id="fileInput"
-                       class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                <input type="file" id="fileInput" class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
             </div>
         </div>
 
         <!-- Path Input Field -->
         <div class="mb-6" id="pathInputSection">
             <label for="pathInput" class="block text-gray-700 text-right text-sm font-medium mb-2">نام فایل خروجی / مسیر URL:</label>
-            <input type="text" id="pathInput" value="output.txt"
-                   class="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700"
-                   placeholder="مثال: my-content یا subfolder/data">
+            <input type="text" id="pathInput" value="output.txt" class="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700" placeholder="مثال: my-content یا subfolder/data">
             <p class="text-xs text-gray-500 text-right mt-1">برای لینک‌ها، این مسیر در آدرس ورکر استفاده می‌شود. برای متن/فایل، نام فایل پیشنهادی برای دانلود است.</p>
         </div>
 
         <!-- Output Format Selection -->
         <div class="mb-8 radio-group grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <input type="radio" id="outputFormatNormal" name="outputFormat" value="normal" class="hidden" checked>
-                <label for="outputFormatNormal" class="flex-grow justify-center">
-                    <span class="ml-2 text-lg">خروجی متن عادی</span>
-                </label>
-            </div>
-            <div>
-                <input type="radio" id="outputFormatBase64" name="outputFormat" value="base64" class="hidden">
-                <label for="outputFormatBase64" class="flex-grow justify-center">
-                    <span class="ml-2 text-lg">خروجی Base64</span>
-                </label>
-            </div>
+            <div> <input type="radio" id="outputFormatNormal" name="outputFormat" value="normal" class="hidden" checked> <label for="outputFormatNormal" class="flex-grow justify-center"><span class="ml-2 text-lg">خروجی متن عادی</span></label> </div>
+            <div> <input type="radio" id="outputFormatBase64" name="outputFormat" value="base64" class="hidden"> <label for="outputFormatBase64" class="flex-grow justify-center"><span class="ml-2 text-lg">خروجی Base64</span></label> </div>
         </div>
 
         <!-- Config Filtering Options -->
         <div class="mb-8 p-4 rounded-lg config-filter-box border text-right">
             <h3 class="text-gray-700 text-lg font-semibold mb-4">گزینه‌های فیلتر کانفیگ (اختیاری)</h3>
-
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
-                <!-- Count Input -->
                 <div class="w-full md:w-1/2">
                     <label for="countInput" class="block text-gray-700 text-sm font-medium mb-2 count-label">تعداد کانفیگ‌ها:</label>
-                    <div class="checkbox-group">
-                        <input type="number" id="countInput" value="0" min="0" disabled
-                               class="w-24 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700">
+                    <div class="checkbox-group flex items-center gap-2">
+                        <input type="number" id="countInput" value="0" min="0" disabled class="w-24 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700">
                         <input type="checkbox" id="unlimitedCount" class="hidden" checked>
-                        <label for="unlimitedCount" class="flex-grow justify-center cursor-pointer py-2 px-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 text-gray-700 text-sm">
-                            <span id="unlimitedCountLabelText">نامحدود</span>
-                        </label>
+                        <label for="unlimitedCount" class="flex-grow justify-center"><span id="unlimitedCountLabelText">نامحدود</span></label>
                     </div>
                 </div>
-
-                <!-- Cloudflare Only Checkbox -->
                 <div class="w-full md:w-1/2 md:mt-0 mt-4">
-                    <label for="cloudflareOnly" class="block text-gray-700 text-sm font-medium mb-2">فیلتر Cloudflare:</label>
-                    <div class="checkbox-group"> <!-- Added checkbox-group here for consistent styling -->
+                    <label class="block text-gray-700 text-sm font-medium mb-2">فیلتر Cloudflare:</label>
+                    <div class="checkbox-group">
                         <input type="checkbox" id="cloudflareOnly" class="hidden">
-                        <label for="cloudflareOnly" class="flex items-center justify-center cursor-pointer py-2 px-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 text-gray-700 text-sm">
-                            <span class="mr-2">فقط کانفیگ‌های Cloudflare</span>
-                        </label>
+                        <label for="cloudflareOnly" class="flex items-center justify-center"><span>فقط کانفیگ‌های Cloudflare</span></label>
                     </div>
                 </div>
             </div>
-
-            <!-- Protocol Filter -->
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-medium mb-2">فیلتر پروتکل:</label>
                 <div class="checkbox-group grid grid-cols-2 gap-2">
-                    <div>
-                        <input type="checkbox" id="protocolAll" name="protocolFilter" value="all" class="hidden" checked>
-                        <label for="protocolAll" class="flex-grow justify-center">
-                            <span class="text-sm">همه پروتکل‌ها</span>
-                        </label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="protocolSS" name="protocolFilter" value="ss" class="hidden">
-                        <label for="protocolSS" class="flex-grow justify-center">
-                            <span class="text-sm">Shadowsocks (SS)</span>
-                        </label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="protocolSSR" name="protocolFilter" value="ssr" class="hidden">
-                        <label for="protocolSSR" class="flex-grow justify-center">
-                            <span class="text-sm">ShadowsocksR (SSR)</span>
-                        </label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="protocolMieru" name="protocolFilter" value="mieru" class="hidden">
-                        <label for="protocolMieru" class="flex-grow justify-center">
-                            <span class="text-sm">Mieru</span>
-                        </label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="protocolSnell" name="protocolFilter" value="snell" class="hidden">
-                        <label for="protocolSnell" class="flex-grow justify-center">
-                            <span class="text-sm">Snell</span>
-                        </label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="protocolVMess" name="protocolFilter" value="vmess" class="hidden">
-                        <label for="protocolVMess" class="flex-grow justify-center">
-                            <span class="text-sm">VMess</span>
-                        </label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="protocolVLESS" name="protocolFilter" value="vless" class="hidden">
-                        <label for="protocolVLESS" class="flex-grow justify-center">
-                            <span class="text-sm">VLESS</span>
-                        </label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="protocolTrojan" name="protocolFilter" value="trojan" class="hidden">
-                        <label for="protocolTrojan" class="flex-grow justify-center">
-                            <span class="text-sm">Trojan</span>
-                        </label>
-                    </div>
-                     <div>
-                        <input type="checkbox" id="protocolAnyTLS" name="protocolFilter" value="anytls" class="hidden">
-                        <label for="protocolAnyTLS" class="flex-grow justify-center">
-                            <span class="text-sm">AnyTLS</span>
-                        </label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="protocolHysteria" name="protocolFilter" value="hysteria,hysteria2" class="hidden">
-                        <label for="protocolHysteria" class="flex-grow justify-center">
-                            <span class="text-sm">Hysteria/2</span>
-                        </label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="protocolTUIC" name="protocolFilter" value="tuic" class="hidden">
-                        <label for="protocolTUIC" class="flex-grow justify-center">
-                            <span class="text-sm">TUIC</span>
-                        </label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="protocolWireGuard" name="protocolFilter" value="wireguard" class="hidden">
-                        <label for="protocolWireGuard" class="flex-grow justify-center">
-                            <span class="text-sm">WireGuard</span>
-                        </label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="protocolSSH" name="protocolFilter" value="ssh" class="hidden">
-                        <label for="protocolSSH" class="flex-grow justify-center">
-                            <span class="text-sm">SSH</span>
-                        </label>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="protocolJuicity" name="protocolFilter" value="juicity" class="hidden">
-                        <label for="protocolJuicity" class="flex-grow justify-center">
-                            <span class="text-sm">Juicity</span>
-                        </label>
-                    </div>
+                    <!-- Protocol checkboxes -->
+                    <div><input type="checkbox" id="protocolAll" name="protocolFilter" value="all" class="hidden" checked><label for="protocolAll" class="justify-center"><span class="text-sm">همه پروتکل‌ها</span></label></div>
+                    <div><input type="checkbox" id="protocolSS" name="protocolFilter" value="ss" class="hidden"><label for="protocolSS" class="justify-center"><span class="text-sm">Shadowsocks (SS)</span></label></div>
+                    <div><input type="checkbox" id="protocolSSR" name="protocolFilter" value="ssr" class="hidden"><label for="protocolSSR" class="justify-center"><span class="text-sm">ShadowsocksR (SSR)</span></label></div>
+                    <div><input type="checkbox" id="protocolMieru" name="protocolFilter" value="mieru" class="hidden"><label for="protocolMieru" class="justify-center"><span class="text-sm">Mieru</span></label></div>
+                    <div><input type="checkbox" id="protocolSnell" name="protocolFilter" value="snell" class="hidden"><label for="protocolSnell" class="justify-center"><span class="text-sm">Snell</span></label></div>
+                    <div><input type="checkbox" id="protocolVMess" name="protocolFilter" value="vmess" class="hidden"><label for="protocolVMess" class="justify-center"><span class="text-sm">VMess</span></label></div>
+                    <div><input type="checkbox" id="protocolVLESS" name="protocolFilter" value="vless" class="hidden"><label for="protocolVLESS" class="justify-center"><span class="text-sm">VLESS</span></label></div>
+                    <div><input type="checkbox" id="protocolTrojan" name="protocolFilter" value="trojan" class="hidden"><label for="protocolTrojan" class="justify-center"><span class="text-sm">Trojan</span></label></div>
+                    <div><input type="checkbox" id="protocolAnyTLS" name="protocolFilter" value="anytls" class="hidden"><label for="protocolAnyTLS" class="justify-center"><span class="text-sm">AnyTLS</span></label></div>
+                    <div><input type="checkbox" id="protocolHysteria" name="protocolFilter" value="hysteria,hysteria2" class="hidden"><label for="protocolHysteria" class="justify-center"><span class="text-sm">Hysteria/2</span></label></div>
+                    <div><input type="checkbox" id="protocolTUIC" name="protocolFilter" value="tuic" class="hidden"><label for="protocolTUIC" class="justify-center"><span class="text-sm">TUIC</span></label></div>
+                    <div><input type="checkbox" id="protocolWireGuard" name="protocolFilter" value="wireguard" class="hidden"><label for="protocolWireGuard" class="justify-center"><span class="text-sm">WireGuard</span></label></div>
+                    <div><input type="checkbox" id="protocolSSH" name="protocolFilter" value="ssh" class="hidden"><label for="protocolSSH" class="justify-center"><span class="text-sm">SSH</span></label></div>
+                    <div><input type="checkbox" id="protocolJuicity" name="protocolFilter" value="juicity" class="hidden"><label for="protocolJuicity" class="justify-center"><span class="text-sm">Juicity</span></label></div>
                 </div>
                 <div class="mt-3">
                     <label for="customProtocols" class="block text-gray-700 text-sm font-medium mb-2">پروتکل‌های سفارشی (کاما-جدا شده):</label>
-                    <input type="text" id="customProtocols" placeholder="مثال: wireguard,ssh"
-                           class="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700">
+                    <input type="text" id="customProtocols" placeholder="مثال: wireguard,ssh" class="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700">
                 </div>
             </div>
         </div>
 
-
-        <button id="processButton"
-                class="w-full bg-indigo-600 text-white py-3 px-6 rounded-xl text-lg font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-md">
-            پردازش
-        </button>
-
-        <div id="loadingMessage" class="mt-4 text-indigo-600 hidden">
-            <p>در حال پردازش...</p>
-        </div>
-
-        <div id="resultArea" class="mt-8 p-4 rounded-xl hidden flex flex-col gap-4 result-area-container">
-            <!-- Link Result Display -->
+        <button id="processButton" class="w-full bg-indigo-600 text-white py-3 px-6 rounded-xl text-lg font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-md">پردازش</button>
+        <div id="loadingMessage" class="mt-4 text-indigo-600 hidden"><p>در حال پردازش...</p></div>
+        <div id="resultArea" class="mt-8 p-4 rounded-xl hidden flex flex-col gap-4">
             <div id="linkResultContainer" class="mb-4 hidden">
                 <p class="text-gray-700 text-right mb-2">لینک قابل اشتراک‌گذاری:</p>
                 <a id="resultLink" href="#" target="_blank" class="result-area text-indigo-600 hover:underline"></a>
             </div>
-
-            <!-- Converted Content Display -->
             <div id="contentResultContainer" class="mb-4">
                 <p class="text-gray-700 text-right mb-2">محتوای تبدیل شده:</p>
                 <pre id="convertedContentDisplay" class="result-area text-gray-800 text-sm p-2 rounded-lg"></pre>
             </div>
-            
             <div class="flex flex-col md:flex-row justify-center gap-4 mt-4">
-                <button id="copyLinkButton" class="bg-indigo-500 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">
-                    کپی لینک
-                </button>
-                <button id="copyContentButton" class="bg-indigo-500 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">
-                    کپی محتوا
-                </button>
-                <button id="downloadButton" class="bg-green-500 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2">
-                    دانلود فایل
-                </button>
+                <button id="copyLinkButton" class="bg-indigo-500 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">کپی لینک</button>
+                <button id="copyContentButton" class="bg-indigo-500 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">کپی محتوا</button>
+                <button id="downloadButton" class="bg-green-500 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2">دانلود فایل</button>
             </div>
-            <div id="copyMessage" class="text-green-600 text-sm mt-2 hidden">کپی شد!</div>
+            <div id="copyMessage" class="text-green-600 text-sm mt-2 hidden"></div>
         </div>
-
-        <div id="errorMessage" class="mt-8 p-4 bg-red-100 border border-red-200 rounded-xl text-red-700 hidden">
-            <p>خطا: <span id="errorText"></span></p>
-        </div>
+        <div id="errorMessage" class="mt-8 p-4 bg-red-100 border border-red-200 rounded-xl text-red-700 hidden"><p>خطا: <span id="errorText"></span></p></div>
 
         <!-- Social Media Links -->
-        <div class="social-icons-container">
-            <a href="https://t.me/vpnclashfa" target="_blank" aria-label="Telegram">
-                <img src="https://cdn.dribbble.com/users/4507400/screenshots/15420681/media/c00f77bc443cbc4ac96d138f9ac854c5.gif" alt="Telegram">
-            </a>
-            <a href="https://twitter.com/coldwater_10" target="_blank" aria-label="Twitter">
-                <img src="https://cdn.dribbble.com/users/2652449/screenshots/14764078/media/2b620382444946ce84aac0a132c40063.gif" alt="Twitter">
-            </a>
-            <a href="https://www.tvtime.com/en/user/43351079/profile" target="_blank" aria-label="TvTime">
-                <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExOTFhMDk5NzJlYzdmZTJjMDM2Y2MzMjBkOTVkODAxM2FjMTdjZGMwNSZlcD12MV9pbnRlcm5hbF9naWZzX2dpZklkJmN0PWc/lj1ghwUoflkw2F3o0T/giphy.gif" alt="TvTime">
-            </a>
-            <a href="https://linktr.ee/coldwater_10" target="_blank" aria-label="Linktree">
-                <img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExdGZrdHVxaGkycXV5M2g2emdvdHkwOWVvOHI5YWR3cTVtODJtbGQwcCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/U3ig2IVcuNn6VgU3oO/giphy.gif" alt="linktr">
-            </a>
+        <div class="flex justify-center items-center gap-4 mt-8">
+            <a href="https://t.me/vpnclashfa" target="_blank"><img src="https://cdn.dribbble.com/users/4507400/screenshots/15420681/media/c00f77bc443cbc4ac96d138f9ac854c5.gif" alt="Telegram" class="w-12 h-12 rounded-full"></a>
+            <a href="https://twitter.com/coldwater_10" target="_blank"><img src="https://cdn.dribbble.com/users/2652449/screenshots/14764078/media/2b620382444946ce84aac0a132c40063.gif" alt="Twitter" class="w-12 h-12 rounded-full"></a>
         </div>
-        <!-- Tehran Time Display -->
         <div id="tehranTime" class="footer-time"></div>
     </div>
 
-    <script>
-        const WORKER_URL_KEY = 'cloudflare_base64_worker_url'; // Key for localStorage
-        const THEME_KEY = 'app_theme'; // Key for theme preference
+<script>
+// ===== CONFIGURATION & CONSTANTS =====
+const PERSONAL_WORKER_URL_KEY = 'personal_processor_worker_url';
+const THEME_KEY = 'app_theme';
+const DONATION_MANAGER_WORKER_URL = "https://modifier.pcwwrk.workers.dev";
 
-        // Variables to store content for download button
-        let downloadContentForButton = '';
-        let downloadMimeTypeForButton = 'text/plain;charset=utf-8';
-        let downloadFilenameForButton = 'output.txt';
+// In-memory state
+let donatedWorkersCache = [];
+let timedOutWorkers = new Set();
+let downloadContentForButton = '', downloadMimeTypeForButton = '', downloadFilenameForButton = '';
 
+// ===== HELPER & CORE LOGIC FUNCTIONS =====
+async function setupProcessorWorkerUrl() {
+    const processorWorkerInput = document.getElementById('processorWorkerInput');
+    const suggestedWorkerMessage = document.getElementById('suggestedWorkerMessage');
+    const personalWorker = localStorage.getItem(PERSONAL_WORKER_URL_KEY);
+    if (personalWorker) {
+        processorWorkerInput.value = personalWorker;
+        suggestedWorkerMessage.classList.add('hidden');
+        return;
+    }
+    try {
+        const response = await fetch(DONATION_MANAGER_WORKER_URL, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Failed to fetch workers list: ${response.status}`);
+        donatedWorkersCache = await response.json();
+        if (!Array.isArray(donatedWorkersCache)) { donatedWorkersCache = []; throw new Error("Worker list format is invalid."); }
+        const availableWorkers = donatedWorkersCache.filter(url => !timedOutWorkers.has(url));
+        if (availableWorkers.length > 0) {
+            processorWorkerInput.value = availableWorkers[Math.floor(Math.random() * availableWorkers.length)];
+            suggestedWorkerMessage.classList.remove('hidden');
+        } else { processorWorkerInput.placeholder = "لیست ورکر عمومی خالی است یا همه تایم‌اوت شده‌اند."; }
+    } catch (error) { console.error('Could not fetch/suggest a worker:', error); processorWorkerInput.placeholder = "خطا در دریافت لیست ورکرهای عمومی"; }
+}
+function readFileAsArrayBuffer(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = error => reject(error); reader.readAsArrayBuffer(file); }); }
+function arrayBufferToBase64(buffer) { let binary = ''; const bytes = new Uint8Array(buffer); for (let i = 0; i < bytes.byteLength; i++) { binary += String.fromCharCode(bytes[i]); } return window.btoa(binary); }
+function downloadFile(filename, content, mimeType) { try { const blob = new Blob([content], { type: mimeType }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); } catch (error) { document.getElementById('errorText').textContent = 'خطا در دانلود فایل: ' + error.message; document.getElementById('errorMessage').classList.remove('hidden'); } }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const workerUrlInput = document.getElementById('workerUrlInput');
-            const saveWorkerUrlButton = document.getElementById('saveWorkerUrlButton');
-            const workerUrlMessage = document.getElementById('workerUrlMessage');
+// ===== INITIALIZATION & DOM EVENT LISTENERS =====
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Element Selectors ---
+    const allElements = {
+        processorWorkerInput: document.getElementById('processorWorkerInput'), saveWorkerUrlButton: document.getElementById('saveWorkerUrlButton'), workerUrlMessage: document.getElementById('workerUrlMessage'), donateWorkerInput: document.getElementById('donateWorkerInput'), donateWorkerButton: document.getElementById('donateWorkerButton'), donateWorkerMessage: document.getElementById('donateWorkerMessage'), processButton: document.getElementById('processButton'), loadingMessage: document.getElementById('loadingMessage'), errorMessage: document.getElementById('errorMessage'), errorText: document.getElementById('errorText'), resultArea: document.getElementById('resultArea'), linkResultContainer: document.getElementById('linkResultContainer'), resultLink: document.getElementById('resultLink'), convertedContentDisplay: document.getElementById('convertedContentDisplay'), copyMessage: document.getElementById('copyMessage'), themeToggle: document.getElementById('themeToggle'), themeIcon: document.getElementById('themeIcon'), tehranTimeDisplay: document.getElementById('tehranTime'), suggestedWorkerMessage: document.getElementById('suggestedWorkerMessage'), linkInputContainer: document.getElementById('linkInputContainer'), textInputContainer: document.getElementById('textInputContainer'), fileInputContainer: document.getElementById('fileInputContainer'), unlimitedCountCheckbox: document.getElementById('unlimitedCount'), countInput: document.getElementById('countInput'), unlimitedCountLabelText: document.getElementById('unlimitedCountLabelText'), protocolAllCheckbox: document.getElementById('protocolAll'), protocolCheckboxes: document.querySelectorAll('input[name="protocolFilter"]'),
+    };
 
-            const urlInput = document.getElementById('urlInput');
-            const textInput = document.getElementById('textInput');
-            const fileInput = document.getElementById('fileInput');
-            const pathInput = document.getElementById('pathInput');
-            
-            const linkInputContainer = document.getElementById('linkInputContainer');
-            const textInputContainer = document.getElementById('textInputContainer');
-            const fileInputContainer = document.getElementById('fileInputContainer');
-            const inputTypeRadios = document.querySelectorAll('input[name="inputType"]');
+    // --- Theme & Time Management ---
+    function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); allElements.themeIcon.textContent = theme === 'dark' ? '🌙' : '☀️'; localStorage.setItem(THEME_KEY, theme); }
+    const savedTheme = localStorage.getItem(THEME_KEY) || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    allElements.themeToggle.checked = (savedTheme === 'dark'); applyTheme(savedTheme);
+    allElements.themeToggle.addEventListener('change', () => applyTheme(allElements.themeToggle.checked ? 'dark' : 'light'));
+    function updateTehranTime() { allElements.tehranTimeDisplay.textContent = `تهران: ${new Date().toLocaleTimeString('fa-IR', { timeZone: 'Asia/Tehran', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}`; }
+    setInterval(updateTehranTime, 1000); updateTehranTime();
 
-            const outputFormatRadios = document.querySelectorAll('input[name="outputFormat"]'); // New
-            const countInput = document.getElementById('countInput'); // New
-            const unlimitedCountCheckbox = document.getElementById('unlimitedCount'); // New
-            const unlimitedCountLabelText = document.getElementById('unlimitedCountLabelText'); // New
-            const protocolCheckboxes = document.querySelectorAll('input[name="protocolFilter"]'); // New
-            const protocolAllCheckbox = document.getElementById('protocolAll'); // New
-            const customProtocolsInput = document.getElementById('customProtocols'); // New
-            const cloudflareOnlyCheckbox = document.getElementById('cloudflareOnly'); // New
+    // --- Initial Worker Setup ---
+    setupProcessorWorkerUrl();
 
-            const processButton = document.getElementById('processButton');
-            const loadingMessage = document.getElementById('loadingMessage');
-            const resultArea = document.getElementById('resultArea');
-            
-            const linkResultContainer = document.getElementById('linkResultContainer');
-            const resultLink = document.getElementById('resultLink');
-            const convertedContentDisplay = document.getElementById('convertedContentDisplay');
-            
-            const copyLinkButton = document.getElementById('copyLinkButton');
-            const copyContentButton = document.getElementById('copyContentButton');
-            const downloadButton = document.getElementById('downloadButton');
-            const copyMessage = document.getElementById('copyMessage');
-            const errorMessage = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
-
-            const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = document.getElementById('themeIcon');
-            const tehranTimeDisplay = document.getElementById('tehranTime');
-
-            // --- Theme Management ---
-            function applyTheme(theme) {
-                document.documentElement.setAttribute('data-theme', theme);
-                themeIcon.textContent = theme === 'dark' ? '🌙' : '☀️';
-                localStorage.setItem(THEME_KEY, theme);
-            }
-
-            // Check saved theme or system preference
-            const savedTheme = localStorage.getItem(THEME_KEY);
-            if (savedTheme) {
-                themeToggle.checked = (savedTheme === 'dark');
-                applyTheme(savedTheme);
-            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                // Default to system preference if no saved theme
-                themeToggle.checked = true;
-                applyTheme('dark');
-            } else {
-                applyTheme('light');
-            }
-
-            themeToggle.addEventListener('change', () => {
-                applyTheme(themeToggle.checked ? 'dark' : 'light');
-            });
-
-            // --- Tehran Time Display ---
-            function updateTehranTime() {
-                const now = new Date();
-                const options = {
-                    timeZone: 'Asia/Tehran',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false // 24-hour format
-                };
-                const tehranTime = now.toLocaleTimeString('fa-IR', options); // Use fa-IR for Persian numerals if desired
-                tehranTimeDisplay.textContent = `تهران: ${tehranTime}`;
-            }
-            // Update time every second
-            setInterval(updateTehranTime, 1000);
-            updateTehranTime(); // Initial call
-
-            // --- Worker URL Management ---
-            const savedWorkerUrl = localStorage.getItem(WORKER_URL_KEY);
-            if (savedWorkerUrl) {
-                workerUrlInput.value = savedWorkerUrl;
-            }
-
-            saveWorkerUrlButton.addEventListener('click', () => {
-                const url = workerUrlInput.value.trim();
-                if (url) {
-                    localStorage.setItem(WORKER_URL_KEY, url);
-                    workerUrlMessage.classList.remove('hidden');
-                    setTimeout(() => workerUrlMessage.classList.add('hidden'), 2000);
-                } else {
-                    errorText.textContent = 'لطفاً آدرس ورکر را وارد کنید.';
-                    errorMessage.classList.remove('hidden');
-                }
-            });
-
-            // --- Input Type Visibility ---
-            function updateInputVisibility() {
-                const selectedType = document.querySelector('input[name="inputType"]:checked').value;
-                linkInputContainer.classList.add('hidden');
-                textInputContainer.classList.add('hidden');
-                fileInputContainer.classList.add('hidden');
-
-                if (selectedType === 'link') {
-                    linkInputContainer.classList.remove('hidden');
-                } else if (selectedType === 'text') {
-                    textInputContainer.classList.remove('hidden');
-                } else if (selectedType === 'file') {
-                    fileInputContainer.classList.remove('hidden');
-                }
-            }
-            inputTypeRadios.forEach(radio => {
-                radio.addEventListener('change', updateInputVisibility);
-            });
-            updateInputVisibility();
-
-            // --- Config Filtering UI Logic ---
-            unlimitedCountCheckbox.addEventListener('change', () => {
-                countInput.disabled = unlimitedCountCheckbox.checked;
-                unlimitedCountLabelText.textContent = unlimitedCountCheckbox.checked ? 'نامحدود' : 'محدود'; // Toggle text
-                if (unlimitedCountCheckbox.checked) {
-                    countInput.value = 0; // Set to 0 for unlimited in backend
-                } else {
-                    countInput.value = 300; // Default or last value
-                }
-            });
-
-            protocolCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', () => {
-                    if (checkbox.id === 'protocolAll') {
-                        if (checkbox.checked) {
-                            // If "All Protocols" is checked
-                            Array.from(protocolCheckboxes).forEach(otherCheckbox => {
-                                if (otherCheckbox.id !== 'protocolAll') {
-                                    otherCheckbox.checked = false; // Uncheck specific protocols
-                                    otherCheckbox.disabled = true; // Disable specific protocols
-                                }
-                            });
-                            // Custom protocols input remains enabled as per user request
-                            customProtocolsInput.disabled = false;
-                        } else {
-                            // If "All Protocols" is unchecked
-                            // Re-enable all specific protocol checkboxes
-                            Array.from(protocolCheckboxes).forEach(otherCheckbox => {
-                                if (otherCheckbox.id !== 'protocolAll') {
-                                    otherCheckbox.disabled = false; // Enable specific protocols
-                                }
-                            });
-                            // Custom protocols input remains enabled
-                            customProtocolsInput.disabled = false;
-                        }
-                    } else {
-                        // If a specific protocol checkbox is changed
-                        if (checkbox.checked) {
-                            // If a specific protocol is checked
-                            protocolAllCheckbox.checked = false; // Uncheck "All Protocols"
-                            protocolAllCheckbox.disabled = true; // Disable "All Protocols"
-                            // Custom protocols input remains enabled
-                            customProtocolsInput.disabled = false;
-                        } else {
-                            // If a specific protocol is unchecked, check if any others are still checked
-                            const anyOtherSpecificChecked = Array.from(protocolCheckboxes).some(cb => cb.checked && cb.id !== 'protocolAll');
-                            if (!anyOtherSpecificChecked) {
-                                // If no other specific protocols are checked, re-enable "All Protocols"
-                                protocolAllCheckbox.disabled = false;
-                            }
-                            // Custom protocols input remains enabled
-                            customProtocolsInput.disabled = false;
-                        }
-                    }
-                });
-            });
-            
-            // Initial state setup for protocol checkboxes on DOMContentLoaded
-            unlimitedCountCheckbox.checked = true; // Default unlimited
-            countInput.disabled = true; // Disable count input if unlimited is checked
-            countInput.value = 0; // Set count to 0 for unlimited
-            unlimitedCountLabelText.textContent = 'نامحدود'; // Set initial text for unlimited checkbox
-
-            protocolAllCheckbox.checked = true; // Default all protocols
-            protocolCheckboxes.forEach(checkbox => {
-                if (checkbox.id !== 'protocolAll') {
-                    checkbox.disabled = protocolAllCheckbox.checked;
-                    checkbox.checked = false; // Ensure other protocols are unchecked
-                }
-            });
-            customProtocolsInput.disabled = false; // Custom protocols always enabled
-
-            cloudflareOnlyCheckbox.checked = false; // Default Cloudflare only to false
+    // --- UI Listeners (Filters, Input Type) ---
+    document.querySelectorAll('input[name="inputType"]').forEach(radio => radio.addEventListener('change', () => {
+        const selectedType = document.querySelector('input[name="inputType"]:checked').value;
+        allElements.linkInputContainer.classList.toggle('hidden', selectedType !== 'link');
+        allElements.textInputContainer.classList.toggle('hidden', selectedType !== 'text');
+        allElements.fileInputContainer.classList.toggle('hidden', selectedType !== 'file');
+    }));
+    allElements.unlimitedCountCheckbox.addEventListener('change', () => {
+        allElements.countInput.disabled = allElements.unlimitedCountCheckbox.checked;
+        allElements.unlimitedCountLabelText.textContent = allElements.unlimitedCountCheckbox.checked ? 'نامحدود' : 'محدود';
+        if (allElements.unlimitedCountCheckbox.checked) allElements.countInput.value = 0;
+    });
+    allElements.protocolCheckboxes.forEach(checkbox => checkbox.addEventListener('change', () => {
+        const isAll = checkbox.id === 'protocolAll';
+        const specificCheckboxes = Array.from(allElements.protocolCheckboxes).filter(cb => cb.id !== 'protocolAll');
+        if (isAll) { specificCheckboxes.forEach(cb => { cb.checked = false; cb.disabled = checkbox.checked; });
+        } else {
+            const anySpecificChecked = specificCheckboxes.some(cb => cb.checked);
+            allElements.protocolAllCheckbox.disabled = anySpecificChecked;
+            if (anySpecificChecked) allElements.protocolAllCheckbox.checked = false;
+        }
+    }));
+    if (allElements.protocolAllCheckbox.checked) { Array.from(allElements.protocolCheckboxes).filter(cb => cb.id !== 'protocolAll').forEach(cb => cb.disabled = true); }
 
 
-            // --- Processing Logic ---
-            processButton.addEventListener('click', async () => {
-                const workerBaseUrl = workerUrlInput.value.trim();
-                if (!workerBaseUrl) {
-                    errorText.textContent = 'لطفاً آدرس ورکر کلادفلر را وارد و ذخیره کنید.';
-                    errorMessage.classList.remove('hidden');
-                    return;
-                }
+    // --- Core Action Listeners ---
+    allElements.saveWorkerUrlButton.addEventListener('click', () => {
+        const url = allElements.processorWorkerInput.value.trim();
+        if (url) { localStorage.setItem(PERSONAL_WORKER_URL_KEY, url); allElements.workerUrlMessage.textContent = 'آدرس ورکر شخصی شما ذخیره شد!'; allElements.suggestedWorkerMessage.classList.add('hidden'); } else { localStorage.removeItem(PERSONAL_WORKER_URL_KEY); allElements.workerUrlMessage.textContent = 'آدرس شخصی حذف شد. برای استفاده از ورکر عمومی صفحه را رفرش کنید.'; }
+        allElements.workerUrlMessage.classList.remove('hidden'); setTimeout(() => allElements.workerUrlMessage.classList.add('hidden'), 3000); if(!url) setTimeout(() => window.location.reload(), 1000);
+    });
 
-                const selectedInputType = document.querySelector('input[name="inputType"]:checked').value;
-                const selectedOutputFormat = document.querySelector('input[name="outputFormat"]:checked').value; // New
-                let userPath = pathInput.value.trim();
+    allElements.donateWorkerButton.addEventListener('click', async () => {
+        const urlToDonate = allElements.donateWorkerInput.value.trim();
+        if (!urlToDonate || !urlToDonate.startsWith('https://')) { allElements.donateWorkerMessage.innerHTML = 'لطفاً یک آدرس ورکر معتبر (شروع با https://) وارد کنید.'; allElements.donateWorkerMessage.style.color = 'var(--error-text)'; allElements.donateWorkerMessage.classList.remove('hidden'); return; }
+        allElements.donateWorkerButton.disabled = true; allElements.donateWorkerButton.textContent = 'در حال ارسال و تست...'; allElements.donateWorkerMessage.classList.add('hidden');
+        try {
+            const response = await fetch(`${DONATION_MANAGER_WORKER_URL}/donate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: urlToDonate }) });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'یک خطای ناشناخته رخ داد.');
+            allElements.donateWorkerMessage.innerHTML = `✅ ${result.message}`; allElements.donateWorkerMessage.style.color = 'var(--button-secondary-bg)'; allElements.donateWorkerInput.value = '';
+        } catch (error) { allElements.donateWorkerMessage.innerHTML = `❌ خطا: ${error.message}`; allElements.donateWorkerMessage.style.color = 'var(--error-text)'; }
+        finally { allElements.donateWorkerMessage.classList.remove('hidden'); allElements.donateWorkerButton.disabled = false; allElements.donateWorkerButton.textContent = 'اهدا و تست خودکار'; }
+    });
 
-                resultArea.classList.add('hidden');
-                errorMessage.classList.add('hidden');
-                copyMessage.classList.add('hidden');
-                loadingMessage.classList.remove('hidden');
+    allElements.processButton.addEventListener('click', async () => {
+        const processorWorkerUrl = allElements.processorWorkerInput.value.trim();
+        if (!processorWorkerUrl) { allElements.errorText.textContent = 'آدرس ورکر پردازشگر مشخص نشده است.'; allElements.errorMessage.classList.remove('hidden'); return; }
+        allElements.resultArea.classList.add('hidden'); allElements.errorMessage.classList.add('hidden'); allElements.copyMessage.classList.add('hidden'); allElements.loadingMessage.classList.remove('hidden'); allElements.processButton.disabled = true;
+        try {
+            let contentToProcess, mimeType = 'text/plain';
+            const selectedInputType = document.querySelector('input[name="inputType"]:checked').value;
+            if (selectedInputType === 'link') { contentToProcess = document.getElementById('urlInput').value.trim(); if (!contentToProcess) throw new Error('لطفاً یک لینک معتبر وارد کنید.'); }
+            else if (selectedInputType === 'text') { contentToProcess = document.getElementById('textInput').value; if (!contentToProcess) throw new Error('لطفاً متنی را وارد کنید.'); }
+            else if (selectedInputType === 'file') { const file = document.getElementById('fileInput').files[0]; if (!file) throw new Error('لطفاً یک فایل را انتخاب کنید.'); mimeType = file.type || 'application/octet-stream'; contentToProcess = await readFileAsArrayBuffer(file); }
+            const selectedProtocols = allElements.protocolAllCheckbox.checked ? ['all'] : [...Array.from(allElements.protocolCheckboxes).filter(cb => cb.checked && cb.id !== 'protocolAll').map(cb => cb.value), ...document.getElementById('customProtocols').value.trim().split(',').map(p => p.trim()).filter(Boolean)];
+            const payload = { inputType: selectedInputType, content: selectedInputType === 'file' ? arrayBufferToBase64(contentToProcess) : contentToProcess, path: document.getElementById('pathInput').value.trim(), mimeType: mimeType, outputFormat: document.querySelector('input[name="outputFormat"]:checked').value, count: allElements.unlimitedCountCheckbox.checked ? 0 : parseInt(allElements.countInput.value, 10), protocols: selectedProtocols, cloudflareOnly: document.getElementById('cloudflareOnly').checked };
+            const response = await fetch(processorWorkerUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!response.ok) { if ((response.status === 429 || response.status >= 500) && donatedWorkersCache.includes(processorWorkerUrl)) { timedOutWorkers.add(processorWorkerUrl); } throw new Error(`خطا از ورکر پردازشگر: ${response.status} - ${await response.text()}`); }
+            const resultJson = await response.json();
+            allElements.linkResultContainer.classList.add('hidden');
+            if (selectedInputType === 'link' && resultJson.url) { allElements.linkResultContainer.classList.remove('hidden'); allElements.resultLink.textContent = resultJson.url; allElements.resultLink.href = resultJson.url; const contentResponse = await fetch(resultJson.url); if (!contentResponse.ok) throw new Error('خطا در دریافت محتوا از لینک جدید.'); downloadContentForButton = await contentResponse.text(); }
+            else if (resultJson.content) { downloadContentForButton = resultJson.content; }
+            else { throw new Error('پاسخ نامعتبر از ورکر.'); }
+            allElements.convertedContentDisplay.textContent = downloadContentForButton;
+            downloadMimeTypeForButton = resultJson.mimeType || 'application/octet-stream';
+            downloadFilenameForButton = document.getElementById('pathInput').value.trim() || 'output.txt';
+            if (downloadMimeTypeForButton.includes('text') && !downloadFilenameForButton.endsWith('.txt')) { downloadFilenameForButton += '.txt'; }
+            allElements.resultArea.classList.remove('hidden');
+        } catch (e) { allElements.errorText.textContent = 'خطا در عملیات پردازش: ' + e.message; allElements.errorMessage.classList.remove('hidden'); }
+        finally { allElements.loadingMessage.classList.add('hidden'); allElements.processButton.disabled = false; }
+    });
 
-                let contentToProcess = '';
-                let isValidInput = true;
-                let mimeType = 'text/plain';
-                let finalDownloadFilename = userPath;
-
-                if (selectedInputType === 'link') {
-                    contentToProcess = urlInput.value.trim();
-                    if (!contentToProcess) {
-                        errorText.textContent = 'لطفاً یک لینک معتبر وارد کنید.';
-                        isValidInput = false;
-                    }
-                    if (!userPath) {
-                        userPath = 'output';
-                        pathInput.value = userPath;
-                    }
-                    if (userPath.startsWith('/')) {
-                        userPath = userPath.substring(1);
-                    }
-                    finalDownloadFilename = userPath.split('/').pop();
-                } else if (selectedInputType === 'text') {
-                    contentToProcess = textInput.value;
-                    if (!contentToProcess) {
-                        errorText.textContent = 'لطفاً متنی را وارد کنید.';
-                        isValidInput = false;
-                    }
-                    if (!userPath) {
-                        userPath = 'output.txt';
-                        pathInput.value = userPath;
-                    }
-                    finalDownloadFilename = userPath;
-                } else if (selectedInputType === 'file') {
-                    const file = fileInput.files[0];
-                    if (!file) {
-                        errorText.textContent = 'لطفاً یک فایل را انتخاب کنید.';
-                        isValidInput = false;
-                    } else {
-                        mimeType = file.type || 'application/octet-stream';
-                        try {
-                            contentToProcess = await readFileAsArrayBuffer(file);
-                        } catch (err) {
-                            errorText.textContent = 'خطا در خواندن فایل: ' + err.message;
-                            isValidInput = false;
-                        }
-                        if (!userPath) {
-                            userPath = file.name || 'output.bin';
-                            pathInput.value = userPath;
-                        }
-                        finalDownloadFilename = userPath;
-                    }
-                }
-
-                if (!isValidInput) {
-                    errorMessage.classList.remove('hidden');
-                    loadingMessage.classList.add('hidden');
-                    return;
-                }
-
-                // Get config filtering options
-                const count = unlimitedCountCheckbox.checked ? 0 : parseInt(countInput.value, 10);
-                let selectedProtocols = [];
-                if (!protocolAllCheckbox.checked) {
-                    protocolCheckboxes.forEach(checkbox => {
-                        if (checkbox.checked && checkbox.id !== 'protocolAll') {
-                            selectedProtocols.push(checkbox.value);
-                        }
-                    });
-                    const custom = customProtocolsInput.value.trim();
-                    if (custom) {
-                        selectedProtocols.push(...custom.split(',').map(p => p.trim()));
-                    }
-                } else {
-                    selectedProtocols = ['all']; // Indicate all protocols
-                }
-                const cloudflareOnly = cloudflareOnlyCheckbox.checked;
-
-                let payload = {
-                    inputType: selectedInputType,
-                    content: selectedInputType === 'file' ? arrayBufferToBase64(contentToProcess) : contentToProcess,
-                    path: userPath,
-                    mimeType: mimeType,
-                    outputFormat: selectedOutputFormat, // New: desired output format
-                    count: count, // New: config count
-                    protocols: selectedProtocols, // New: selected protocols
-                    cloudflareOnly: cloudflareOnly // New: cloudflare only filter
-                };
-
-                try {
-                    const workerResponse = await fetch(workerBaseUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!workerResponse.ok) {
-                        const errorData = await workerResponse.text();
-                        throw new Error(`خطا از ورکر: ${workerResponse.status} - ${errorData}`);
-                    }
-
-                    const resultJson = await workerResponse.json();
-                    
-                    // Always show contentResultContainer and linkResultContainer (if applicable)
-                    contentResultContainer.classList.remove('hidden');
-                    linkResultContainer.classList.add('hidden'); // Hide by default, show if link input
-
-                    let shareableLink = '';
-                    let displayedContent = '';
-                    // downloadHref will be set by the downloadFile function now
-
-                    // --- Unified Content Display and Blob Download Setup ---
-                    if (selectedInputType === 'link' && resultJson.url) {
-                        // For link input, display the shareable link
-                        shareableLink = resultJson.url;
-                        linkResultContainer.classList.remove('hidden');
-                        resultLink.textContent = shareableLink;
-                        resultLink.href = shareableLink;
-
-                        // Then fetch the content from the shareable link for display and local download
-                        try {
-                            const contentFetchResponse = await fetch(shareableLink);
-                            if (!contentFetchResponse.ok) {
-                                throw new Error(`خطا در دریافت محتوا از لینک قابل اشتراک‌گذاری: ${contentFetchResponse.status} - ${await contentFetchResponse.text()}`);
-                            }
-                            displayedContent = await contentFetchResponse.text();
-                        } catch (fetchError) {
-                            console.error('Error fetching content from shareable link for display/download:', fetchError);
-                            errorText.textContent = 'خطا در دریافت محتوا از لینک قابل اشتراک‌گذاری: ' + fetchError.message;
-                            errorMessage.classList.remove('hidden');
-                            loadingMessage.classList.add('hidden');
-                            resultArea.classList.add('hidden');
-                            return;
-                        }
-                    } else if (resultJson.content) {
-                        // For text/file input, directly use content from worker
-                        displayedContent = resultJson.content;
-                    } else {
-                        throw new Error('پاسخ نامعتبر از ورکر.');
-                    }
-
-                    convertedContentDisplay.textContent = displayedContent;
-
-                    // Store content and mime type for the download button
-                    downloadContentForButton = displayedContent;
-                    downloadMimeTypeForButton = resultJson.mimeType || 'application/octet-stream';
-                    if (selectedOutputFormat === 'normal') {
-                        downloadMimeTypeForButton += ';charset=utf-8';
-                    }
-                    downloadFilenameForButton = finalDownloadFilename; // Ensure filename is also stored
-
-                    // Ensure .txt extension is added if not present for text files
-                    if (downloadMimeTypeForButton.includes('text') && !downloadFilenameForButton.endsWith('.txt')) {
-                        downloadFilenameForButton += '.txt';
-                    }
-
-
-                } catch (e) {
-                    console.error('Error during processing or download setup:', e);
-                    errorText.textContent = 'خطا در عملیات: ' + e.message;
-                    errorMessage.classList.remove('hidden');
-                } finally {
-                    loadingMessage.classList.add('hidden');
-                    resultArea.classList.remove('hidden');
-                }
-            });
-
-            // Helper functions
-            function readFileAsArrayBuffer(file) {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = error => reject(error);
-                    reader.readAsArrayBuffer(file);
-                });
-            }
-
-            function arrayBufferToBase64(buffer) {
-                let binary = '';
-                const bytes = new Uint8Array(buffer);
-                const len = bytes.byteLength;
-                for (let i = 0; i < len; i++) {
-                    binary += String.fromCharCode(bytes[i]);
-                }
-                return btoa(binary);
-            }
-
-            // Copy Link Button
-            copyLinkButton.addEventListener('click', () => {
-                const textToCopy = resultLink.textContent;
-                const tempInput = document.createElement('textarea');
-                tempInput.value = textToCopy;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                try {
-                    document.execCommand('copy');
-                    copyMessage.textContent = 'لینک کپی شد!';
-                    copyMessage.classList.remove('hidden');
-                    setTimeout(() => copyMessage.classList.add('hidden'), 2000);
-                } catch (err) {
-                    console.error('Failed to copy link: ', err);
-                    errorText.textContent = 'خطا در کپی کردن لینک.';
-                    errorMessage.classList.remove('hidden');
-                } finally {
-                    document.body.removeChild(tempInput);
-                }
-            });
-
-            // Copy Content Button
-            copyContentButton.addEventListener('click', () => {
-                const textToCopy = convertedContentDisplay.textContent;
-                const tempInput = document.createElement('textarea');
-                tempInput.value = textToCopy;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                try {
-                    document.execCommand('copy');
-                    copyMessage.textContent = 'محتوا کپی شد!';
-                    copyMessage.classList.remove('hidden');
-                    setTimeout(() => copyMessage.classList.add('hidden'), 2000);
-                } catch (err) {
-                    console.error('Failed to copy content: ', err);
-                    errorText.textContent = 'خطا در کپی کردن محتوا.';
-                    errorMessage.classList.remove('hidden');
-                } finally {
-                    document.body.removeChild(tempInput);
-                }
-            });
-
-            // --- Unified Download File Function ---
-            function downloadFile(filename, content, mimeType) {
-                console.log('Attempting to download file:', filename);
-                console.log('Content MIME Type for Blob:', mimeType);
-                // console.log('Content for Blob:', content.substring(0, 100) + '...'); // Log first 100 chars
-
-                try {
-                    const blob = new Blob([content], { type: mimeType });
-                    const url = URL.createObjectURL(blob);
-
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = filename;
-                    link.style.display = 'none'; // Hide the link
-
-                    document.body.appendChild(link);
-                    link.click(); // Programmatically click the link
-                    document.body.removeChild(link);
-
-                    URL.revokeObjectURL(url); // Clean up the object URL
-                    console.log('File download initiated successfully via Blob.');
-                } catch (error) {
-                    console.error('Error creating or downloading Blob:', error);
-                    errorText.textContent = 'خطا در دانلود فایل: ' + error.message;
-                    errorMessage.classList.remove('hidden');
-                }
-            }
-
-            // New downloadButton.addEventListener
-            downloadButton.addEventListener('click', (event) => {
-                console.log('Download button clicked.');
-                console.log('Stored download content length:', downloadContentForButton.length);
-                console.log('Stored download filename:', downloadFilenameForButton);
-                console.log('Stored download MIME type:', downloadMimeTypeForButton);
-
-                if (downloadContentForButton) {
-                    downloadFile(downloadFilenameForButton, downloadContentForButton, downloadMimeTypeForButton);
-                } else {
-                    console.error('No content available for download.');
-                    errorText.textContent = 'محتوایی برای دانلود وجود ندارد. ابتدا پردازش را انجام دهید.';
-                    errorMessage.classList.remove('hidden');
-                }
-            });
-        });
-    </script>
+    document.getElementById('copyLinkButton').addEventListener('click', () => { navigator.clipboard.writeText(allElements.resultLink.href).then(() => { allElements.copyMessage.textContent = 'لینک کپی شد!'; allElements.copyMessage.classList.remove('hidden'); setTimeout(() => allElements.copyMessage.classList.add('hidden'), 2000); }); });
+    document.getElementById('copyContentButton').addEventListener('click', () => { navigator.clipboard.writeText(allElements.convertedContentDisplay.textContent).then(() => { allElements.copyMessage.textContent = 'محتوا کپی شد!'; allElements.copyMessage.classList.remove('hidden'); setTimeout(() => allElements.copyMessage.classList.add('hidden'), 2000); }); });
+    document.getElementById('downloadButton').addEventListener('click', () => { if (downloadContentForButton) { downloadFile(downloadFilenameForButton, downloadContentForButton, downloadMimeTypeForButton); } });
+});
+</script>
 </body>
 </html>
