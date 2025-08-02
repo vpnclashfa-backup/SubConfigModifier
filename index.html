@@ -20,7 +20,7 @@
         body { font-family: 'Vazirmatn', sans-serif; background-color: var(--bg-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 1rem; box-sizing: border-box; transition: background-color 0.5s ease; }
         .container { background-color: var(--container-bg); border-radius: 1.5rem; box-shadow: 0 20px 25px -5px var(--shadow-color), 0 8px 10px -6px var(--shadow-color-light); padding: 2.5rem; width: 100%; max-width: 500px; text-align: center; border: 1px solid var(--border-color); transition: background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease; position: relative; }
         h1, p, label, .result-area, .footer-time { color: var(--text-color-primary); transition: color 0.5s ease; }
-        .text-gray-600 { color: var(--text-color-secondary) !important; } .text-gray-700, .text-gray-800 { color: var(--text-color-primary) !important; } .text-gray-500 { color: var(--text-color-secondary) !important; } .text-indigo-600, .text-blue-700 { color: var(--blue-highlight-text) !important; }
+        .text-gray-600 { color: var(--text-color-secondary) !important; } .text-gray-700, .text-gray-800 { color: var(--text-color-primary) !important; } .text-gray-500 { color: var(--text-color-secondary) !important; } .text-indigo-600, .text-blue-700 { color: var(--input-border-focus) !important; }
         input[type="text"], textarea, input[type="file"], input[type="number"] { background-color: var(--input-field-bg); border-color: var(--input-field-border); border-width: 1px; color: var(--text-color-primary); transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; border-radius: 0.75rem; }
         input[type="text"]:focus, textarea:focus, input[type="file"]:focus, input[type="number"]:focus { border-color: var(--input-border-focus); outline: none; box-shadow: 0 0 0 3px var(--input-border-focus), 0 0 15px var(--input-border-focus); }
         input::placeholder, textarea::placeholder { color: var(--text-color-secondary); opacity: 0.7; }
@@ -55,9 +55,9 @@
 
         <!-- Worker URL Configuration -->
         <div class="mb-6 p-4 rounded-lg border" style="border-color: var(--worker-url-border); background-color: var(--worker-url-bg);">
-            <label for="processorWorkerInput" class="block text-blue-700 text-right text-sm font-medium mb-2">آدرس ورکر پردازشگر:</label>
+            <label for="processorWorkerInput" class="block text-blue-700 text-right text-sm font-medium mb-2">آدرس ورکر پردازشگر شما:</label>
             <div id="suggestedWorkerMessage" class="text-xs text-blue-600 bg-blue-100 p-2 rounded-md mb-2 hidden text-center">
-                💡 از یک ورکر عمومی اهدایی استفاده می‌کنید. می‌توانید آن را با ورکر شخصی خود جایگزین کرده و ذخیره کنید.
+                💡 از یک ورکر عمومی استفاده می‌کنید. می‌توانید آن را با ورکر شخصی خود جایگزین کرده و ذخیره کنید.
             </div>
             <input type="text" id="processorWorkerInput" placeholder="در حال یافتن ورکر عمومی..."
                    class="w-full px-4 py-3 border border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-blue-700">
@@ -68,25 +68,22 @@
             <div id="workerUrlMessage" class="text-green-600 text-sm mt-2 hidden"></div>
         </div>
         
-        <!-- Donate Worker Section -->
-        <div class="mb-6 p-4 rounded-lg border" style="background-color: var(--config-filter-bg); border-color: var(--config-filter-border);">
-            <label for="donateWorkerInput" class="block text-right text-sm font-medium mb-2">می‌خواهید یک ورکر عمومی اهدا کنید؟</label>
-            <p class="text-xs text-right mb-2 text-gray-500">ورکر شما به صورت خودکار تست شده و در صورت تایید به لیست عمومی اضافه می‌شود.</p>
-            <p class="text-xs text-right mb-3 text-gray-500">
-                برای ساخت ورکر شخصی، از 
-                <a href="https://github.com/vpnclashfa-backup/SubConfigModifier/blob/main/worker.js" target="_blank" rel="noopener noreferrer" class="font-bold hover:underline" style="color: var(--input-border-focus);">کد منبع</a>
-                استفاده کنید.
+        <!-- Donate Worker Section (Manual via Telegram) -->
+        <div class="mb-6 p-4 rounded-lg border text-center" style="background-color: var(--config-filter-bg); border-color: var(--config-filter-border);">
+            <h3 class="font-semibold mb-2" style="color: var(--text-color-primary);">می‌خواهید یک ورکر عمومی اهدا کنید؟</h3>
+            <p class="text-xs mb-4 text-gray-500">
+                ورکر شما پس از بررسی به لیست عمومی اضافه خواهد شد. لطفاً آدرس ورکر خود را از طریق تلگرام ارسال کنید.
             </p>
-            <div class="flex flex-col sm:flex-row gap-2">
-                <input type="text" id="donateWorkerInput" placeholder="آدرس ورکر پردازشگر شما..."
-                       class="flex-grow w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <button id="donateWorkerButton"
-                        class="bg-indigo-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    اهدا و تست خودکار
-                </button>
-            </div>
-            <div id="donateWorkerMessage" class="text-sm mt-2 hidden text-center"></div>
+            <a href="https://t.me/vpnclashfa" target="_blank" rel="noopener noreferrer" 
+               class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 rounded-lg text-white font-semibold transition-transform transform hover:scale-105"
+               style="background-color: #2AABEE;">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.88l-1.45 6.89c-.1.45-.43.56-.81.35l-2.25-1.65-1.09 1.05c-.12.12-.22.22-.44.22l.16-2.31 4.2-3.8c.18-.17-.05-.27-.3-.12l-5.18 3.23-2.21-.69c-.45-.14-.47-.43.09-.64l8.83-3.41c.38-.15.72.08.6.53z"/>
+                </svg>
+                <span>ارسال ورکر در تلگرام (@vpnclashfa)</span>
+            </a>
         </div>
+
 
         <!-- Input Type Selection -->
         <div class="mb-6">
@@ -129,10 +126,10 @@
 
         <!-- Config Filtering Options -->
         <div class="mb-8 p-4 rounded-lg border" style="background-color: var(--config-filter-bg); border-color: var(--config-filter-border); color: var(--text-color-primary);">
-            <h3 class="text-lg font-semibold mb-4 text-right">گزینه‌های فیلتر کانفیگ (اختیاری)</h3>
+            <h3 class="text-gray-700 text-lg font-semibold mb-4 text-right">گزینه‌های فیلتر کانفیگ (اختیاری)</h3>
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
                 <div class="w-full md:w-1/2">
-                    <label for="countInput" class="block text-sm font-medium mb-2 text-right">تعداد کانفیگ‌ها:</label>
+                    <label for="countInput" class="block text-gray-700 text-sm font-medium mb-2 count-label">تعداد کانفیگ‌ها:</label>
                     <div class="checkbox-group flex items-center gap-2">
                         <input type="number" id="countInput" value="0" min="0" disabled class="w-24 px-3 py-2 border">
                         <input type="checkbox" id="unlimitedCount" class="hidden" checked>
@@ -140,7 +137,7 @@
                     </div>
                 </div>
                 <div class="w-full md:w-1/2 md:mt-0 mt-4">
-                    <label class="block text-sm font-medium mb-2 text-right">فیلتر Cloudflare:</label>
+                    <label class="block text-gray-700 text-sm font-medium mb-2">فیلتر Cloudflare:</label>
                     <div class="checkbox-group">
                         <input type="checkbox" id="cloudflareOnly" class="hidden">
                         <label for="cloudflareOnly" class="flex items-center justify-center"><span>فقط کانفیگ‌های Cloudflare</span></label>
@@ -148,7 +145,7 @@
                 </div>
             </div>
             <div class="mb-4">
-                <label class="block text-sm font-medium mb-2 text-right">فیلتر پروتکل:</label>
+                <label class="block text-gray-700 text-sm font-medium mb-2">فیلتر پروتکل:</label>
                 <div class="checkbox-group grid grid-cols-2 gap-2">
                     <div><input type="checkbox" id="protocolAll" name="protocolFilter" value="all" class="hidden" checked><label for="protocolAll" class="justify-center"><span class="text-sm">همه پروتکل‌ها</span></label></div>
                     <div><input type="checkbox" id="protocolSS" name="protocolFilter" value="ss" class="hidden"><label for="protocolSS" class="justify-center"><span class="text-sm">Shadowsocks (SS)</span></label></div>
@@ -166,7 +163,7 @@
                     <div><input type="checkbox" id="protocolJuicity" name="protocolFilter" value="juicity" class="hidden"><label for="protocolJuicity" class="justify-center"><span class="text-sm">Juicity</span></label></div>
                 </div>
                 <div class="mt-3">
-                    <label for="customProtocols" class="block text-sm font-medium mb-2 text-right">پروتکل‌های سفارشی (کاما-جدا شده):</label>
+                    <label for="customProtocols" class="block text-gray-700 text-sm font-medium mb-2 text-right">پروتکل‌های سفارشی (کاما-جدا شده):</label>
                     <input type="text" id="customProtocols" placeholder="مثال: wireguard,ssh" class="w-full px-3 py-2 border">
                 </div>
             </div>
@@ -206,7 +203,9 @@
 // ===== CONFIGURATION & CONSTANTS =====
 const PERSONAL_WORKER_URL_KEY = 'personal_processor_worker_url';
 const THEME_KEY = 'app_theme';
-const DONATION_MANAGER_WORKER_URL = "https://donationmanager.pcwwrk.workers.dev/";
+
+// Replace with the direct link to your workers.txt file in GitHub
+const DONATED_WORKERS_URL = 'https://raw.githubusercontent.com/vpnclashfa-backup/SubConfigShuffler/main/workers.txt';
 
 // In-memory state
 let donatedWorkersCache = [];
@@ -214,27 +213,49 @@ let timedOutWorkers = new Set();
 let downloadContentForButton = '', downloadMimeTypeForButton = '', downloadFilenameForButton = '';
 
 // ===== HELPER & CORE LOGIC FUNCTIONS =====
+
 async function setupProcessorWorkerUrl() {
     const processorWorkerInput = document.getElementById('processorWorkerInput');
     const suggestedWorkerMessage = document.getElementById('suggestedWorkerMessage');
+
     const personalWorker = localStorage.getItem(PERSONAL_WORKER_URL_KEY);
     if (personalWorker) {
         processorWorkerInput.value = personalWorker;
         suggestedWorkerMessage.classList.add('hidden');
         return;
     }
+
     try {
-        const response = await fetch(DONATION_MANAGER_WORKER_URL, { cache: "no-store" });
-        if (!response.ok) throw new Error(`Failed to fetch workers list: ${response.status}`);
-        donatedWorkersCache = await response.json();
-        if (!Array.isArray(donatedWorkersCache)) { donatedWorkersCache = []; throw new Error("Worker list format is invalid."); }
+        const response = await fetch(DONATED_WORKERS_URL, { cache: "no-store" });
+        if (!response.ok) {
+            throw new Error(`Failed to fetch workers list: ${response.status}`);
+        }
+        const workerText = await response.text();
+        const urls = workerText.split('\n').map(line => line.trim()).filter(line => line.startsWith('https://'));
+        
+        if (urls.length === 0) {
+            processorWorkerInput.placeholder = "لیست ورکر عمومی خالی است.";
+            return;
+        }
+
+        donatedWorkersCache = urls;
         const availableWorkers = donatedWorkersCache.filter(url => !timedOutWorkers.has(url));
+
         if (availableWorkers.length > 0) {
-            processorWorkerInput.value = availableWorkers[Math.floor(Math.random() * availableWorkers.length)];
+            const randomIndex = Math.floor(Math.random() * availableWorkers.length);
+            const suggestedWorker = availableWorkers[randomIndex];
+            processorWorkerInput.value = suggestedWorker;
             suggestedWorkerMessage.classList.remove('hidden');
-        } else { processorWorkerInput.placeholder = "لیست ورکر عمومی خالی است یا همه تایم‌اوت شده‌اند."; }
-    } catch (error) { console.error('Could not fetch/suggest a worker:', error); processorWorkerInput.placeholder = "خطا در دریافت لیست ورکرهای عمومی"; }
+        } else {
+             processorWorkerInput.placeholder = "تمام ورکرهای عمومی موقتا در دسترس نیستند.";
+        }
+    } catch (error) {
+        console.error('Could not fetch or suggest a donated worker:', error);
+        processorWorkerInput.placeholder = "خطا در دریافت لیست ورکرهای عمومی";
+    }
 }
+
+// --- Other helper functions ---
 function readFileAsArrayBuffer(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = error => reject(error); reader.readAsArrayBuffer(file); }); }
 function arrayBufferToBase64(buffer) { let binary = ''; const bytes = new Uint8Array(buffer); for (let i = 0; i < bytes.byteLength; i++) { binary += String.fromCharCode(bytes[i]); } return window.btoa(binary); }
 function downloadFile(filename, content, mimeType) { try { const blob = new Blob([content], { type: mimeType }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); } catch (error) { document.getElementById('errorText').textContent = 'خطا در دانلود فایل: ' + error.message; document.getElementById('errorMessage').classList.remove('hidden'); } }
@@ -243,7 +264,7 @@ function downloadFile(filename, content, mimeType) { try { const blob = new Blob
 document.addEventListener('DOMContentLoaded', () => {
     // --- Element Selectors ---
     const allElements = {
-        processorWorkerInput: document.getElementById('processorWorkerInput'), saveWorkerUrlButton: document.getElementById('saveWorkerUrlButton'), workerUrlMessage: document.getElementById('workerUrlMessage'), donateWorkerInput: document.getElementById('donateWorkerInput'), donateWorkerButton: document.getElementById('donateWorkerButton'), donateWorkerMessage: document.getElementById('donateWorkerMessage'), processButton: document.getElementById('processButton'), loadingMessage: document.getElementById('loadingMessage'), errorMessage: document.getElementById('errorMessage'), errorText: document.getElementById('errorText'), resultArea: document.getElementById('resultArea'), linkResultContainer: document.getElementById('linkResultContainer'), resultLink: document.getElementById('resultLink'), convertedContentDisplay: document.getElementById('convertedContentDisplay'), copyMessage: document.getElementById('copyMessage'), themeToggle: document.getElementById('themeToggle'), themeIcon: document.getElementById('themeIcon'), tehranTimeDisplay: document.getElementById('tehranTime'), suggestedWorkerMessage: document.getElementById('suggestedWorkerMessage'), linkInputContainer: document.getElementById('linkInputContainer'), textInputContainer: document.getElementById('textInputContainer'), fileInputContainer: document.getElementById('fileInputContainer'), unlimitedCountCheckbox: document.getElementById('unlimitedCount'), countInput: document.getElementById('countInput'), unlimitedCountLabelText: document.getElementById('unlimitedCountLabelText'), protocolAllCheckbox: document.getElementById('protocolAll'), protocolCheckboxes: document.querySelectorAll('input[name="protocolFilter"]'),
+        processorWorkerInput: document.getElementById('processorWorkerInput'), saveWorkerUrlButton: document.getElementById('saveWorkerUrlButton'), workerUrlMessage: document.getElementById('workerUrlMessage'), processButton: document.getElementById('processButton'), loadingMessage: document.getElementById('loadingMessage'), errorMessage: document.getElementById('errorMessage'), errorText: document.getElementById('errorText'), resultArea: document.getElementById('resultArea'), linkResultContainer: document.getElementById('linkResultContainer'), resultLink: document.getElementById('resultLink'), convertedContentDisplay: document.getElementById('convertedContentDisplay'), copyMessage: document.getElementById('copyMessage'), themeToggle: document.getElementById('themeToggle'), themeIcon: document.getElementById('themeIcon'), tehranTimeDisplay: document.getElementById('tehranTime'), suggestedWorkerMessage: document.getElementById('suggestedWorkerMessage'), linkInputContainer: document.getElementById('linkInputContainer'), textInputContainer: document.getElementById('textInputContainer'), fileInputContainer: document.getElementById('fileInputContainer'), unlimitedCountCheckbox: document.getElementById('unlimitedCount'), countInput: document.getElementById('countInput'), unlimitedCountLabelText: document.getElementById('unlimitedCountLabelText'), protocolAllCheckbox: document.getElementById('protocolAll'), protocolCheckboxes: document.querySelectorAll('input[name="protocolFilter"]'),
     };
 
     // --- Theme & Time Management ---
@@ -281,25 +302,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }));
     if (allElements.protocolAllCheckbox.checked) { Array.from(allElements.protocolCheckboxes).filter(cb => cb.id !== 'protocolAll').forEach(cb => cb.disabled = true); }
 
-
     // --- Core Action Listeners ---
     allElements.saveWorkerUrlButton.addEventListener('click', () => {
         const url = allElements.processorWorkerInput.value.trim();
         if (url) { localStorage.setItem(PERSONAL_WORKER_URL_KEY, url); allElements.workerUrlMessage.textContent = 'آدرس ورکر شخصی شما ذخیره شد!'; allElements.suggestedWorkerMessage.classList.add('hidden'); } else { localStorage.removeItem(PERSONAL_WORKER_URL_KEY); allElements.workerUrlMessage.textContent = 'آدرس شخصی حذف شد. برای استفاده از ورکر عمومی صفحه را رفرش کنید.'; }
         allElements.workerUrlMessage.classList.remove('hidden'); setTimeout(() => allElements.workerUrlMessage.classList.add('hidden'), 3000); if(!url) setTimeout(() => window.location.reload(), 1000);
-    });
-
-    allElements.donateWorkerButton.addEventListener('click', async () => {
-        const urlToDonate = allElements.donateWorkerInput.value.trim();
-        if (!urlToDonate || !urlToDonate.startsWith('https://')) { allElements.donateWorkerMessage.innerHTML = 'لطفاً یک آدرس ورکر معتبر (شروع با https://) وارد کنید.'; allElements.donateWorkerMessage.style.color = 'var(--error-text)'; allElements.donateWorkerMessage.classList.remove('hidden'); return; }
-        allElements.donateWorkerButton.disabled = true; allElements.donateWorkerButton.textContent = 'در حال ارسال و تست...'; allElements.donateWorkerMessage.classList.add('hidden');
-        try {
-            const response = await fetch(`${DONATION_MANAGER_WORKER_URL}donate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: urlToDonate }) });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error || 'یک خطای ناشناخته رخ داد.');
-            allElements.donateWorkerMessage.innerHTML = `✅ ${result.message}`; allElements.donateWorkerMessage.style.color = 'var(--button-secondary-bg)'; allElements.donateWorkerInput.value = '';
-        } catch (error) { allElements.donateWorkerMessage.innerHTML = `❌ خطا: ${error.message}`; allElements.donateWorkerMessage.style.color = 'var(--error-text)'; }
-        finally { allElements.donateWorkerMessage.classList.remove('hidden'); allElements.donateWorkerButton.disabled = false; allElements.donateWorkerButton.textContent = 'اهدا و تست خودکار'; }
     });
 
     allElements.processButton.addEventListener('click', async () => {
