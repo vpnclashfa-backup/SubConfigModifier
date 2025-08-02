@@ -19,8 +19,9 @@
         }
         body { font-family: 'Vazirmatn', sans-serif; background-color: var(--bg-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 1rem; box-sizing: border-box; transition: background-color 0.5s ease; }
         .container { background-color: var(--container-bg); border-radius: 1.5rem; box-shadow: 0 20px 25px -5px var(--shadow-color), 0 8px 10px -6px var(--shadow-color-light); padding: 2.5rem; width: 100%; max-width: 500px; text-align: center; border: 1px solid var(--border-color); transition: background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease; position: relative; }
-        h1, p, label, .result-area, .footer-time { color: var(--text-color-primary); transition: color 0.5s ease; }
+        h1, p, label, .result-area, .footer-time, h3 { color: var(--text-color-primary); transition: color 0.5s ease; }
         .text-gray-600 { color: var(--text-color-secondary) !important; } .text-gray-700, .text-gray-800 { color: var(--text-color-primary) !important; } .text-gray-500 { color: var(--text-color-secondary) !important; } .text-indigo-600, .text-blue-700 { color: var(--input-border-focus) !important; }
+        [data-theme='dark'] .text-indigo-400 { color: #818cf8 !important; }
         input[type="text"], textarea, input[type="file"], input[type="number"] { background-color: var(--input-field-bg); border-color: var(--input-field-border); border-width: 1px; color: var(--text-color-primary); transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; border-radius: 0.75rem; }
         input[type="text"]:focus, textarea:focus, input[type="file"]:focus, input[type="number"]:focus { border-color: var(--input-border-focus); outline: none; box-shadow: 0 0 0 3px var(--input-border-focus), 0 0 15px var(--input-border-focus); }
         input::placeholder, textarea::placeholder { color: var(--text-color-secondary); opacity: 0.7; }
@@ -63,7 +64,7 @@
                    class="w-full px-4 py-3 border border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-blue-700">
             <button id="saveWorkerUrlButton"
                     class="mt-3 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                ذخیره آدرس ورکر شخصی
+                ذخیره آدرس ورکر شخصی روی مرورگرتون بصورت لوکال
             </button>
             <div id="workerUrlMessage" class="text-green-600 text-sm mt-2 hidden"></div>
         </div>
@@ -82,6 +83,25 @@
                 </svg>
                 <span>ارسال ورکر در تلگرام (@vpnclashfa)</span>
             </a>
+        </div>
+        
+        <!-- ===== NEW SECTION: Instructions for Creating a Worker ===== -->
+        <div class="mb-6 p-4 rounded-lg border text-right" style="background-color: var(--config-filter-bg); border-color: var(--config-filter-border);">
+            <h3 class="font-semibold mb-3">چگونه ورکر شخصی بسازیم؟</h3>
+            <p class="text-sm mb-4 text-gray-600">
+                برای ساخت ورکر شخصی یا اهدای آن به لیست عمومی، مراحل زیر را در حساب کلادفلر خود دنبال کنید:
+            </p>
+            <ol class="list-decimal list-inside text-sm text-gray-600 space-y-2">
+                <li>به داشبورد کلادفلر خود بروید، از منوی کناری وارد بخش <strong class="text-indigo-600 dark:text-indigo-400">Workers & Pages</strong> شوید و روی <strong class="text-indigo-600 dark:text-indigo-400">Create Application</strong> کلیک کنید.</li>
+                <li>در تب <strong class="text-indigo-600 dark:text-indigo-400">Workers</strong>، روی <strong class="text-indigo-600 dark:text-indigo-400">Create Worker</strong> کلیک کنید.</li>
+                <li>یک نام برای ورکر خود انتخاب کرده و آن را <strong class="text-indigo-600 dark:text-indigo-400">Deploy</strong> کنید.</li>
+                <li>پس از ساخته شدن، روی <strong class="text-indigo-600 dark:text-indigo-400">Edit code</strong> کلیک کنید.</li>
+                <li>تمام کدهای پیش‌فرض را پاک کرده و محتوای <a href="https://raw.githubusercontent.com/vpnclashfa-backup/SubConfigModifier/main/worker.js" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">این فایل اسکریپت</a> را به طور کامل کپی و در ویرایشگر کلادفلر جای‌گذاری کنید.</li>
+                <li>روی <strong class="text-indigo-600 dark:text-indigo-400">Save and Deploy</strong> کلیک کنید.</li>
+            </ol>
+            <p class="text-sm mt-4 text-gray-600">
+                پس از اتمام، آدرس ورکر ساخته شده (مثلاً: <code class="bg-gray-200 dark:bg-gray-700 text-red-500 p-1 rounded text-xs">my-worker.user.workers.dev</code>) را می‌توانید در کادر "آدرس ورکر پردازشگر" در بالای صفحه برای استفاده شخصی ذخیره کنید، یا از طریق تلگرام برای ما ارسال کرده تا به لیست عمومی اضافه شود.
+            </p>
         </div>
 
 
@@ -126,10 +146,10 @@
 
         <!-- Config Filtering Options -->
         <div class="mb-8 p-4 rounded-lg border" style="background-color: var(--config-filter-bg); border-color: var(--config-filter-border); color: var(--text-color-primary);">
-            <h3 class="text-gray-700 text-lg font-semibold mb-4 text-right">گزینه‌های فیلتر کانفیگ (اختیاری)</h3>
+            <h3 class="text-lg font-semibold mb-4 text-right">گزینه‌های فیلتر کانفیگ (اختیاری)</h3>
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
                 <div class="w-full md:w-1/2">
-                    <label for="countInput" class="block text-gray-700 text-sm font-medium mb-2 count-label">تعداد کانفیگ‌ها:</label>
+                    <label for="countInput" class="block text-sm font-medium mb-2 count-label">تعداد کانفیگ‌ها:</label>
                     <div class="checkbox-group flex items-center gap-2">
                         <input type="number" id="countInput" value="0" min="0" disabled class="w-24 px-3 py-2 border">
                         <input type="checkbox" id="unlimitedCount" class="hidden" checked>
@@ -137,7 +157,7 @@
                     </div>
                 </div>
                 <div class="w-full md:w-1/2 md:mt-0 mt-4">
-                    <label class="block text-gray-700 text-sm font-medium mb-2">فیلتر Cloudflare:</label>
+                    <label class="block text-sm font-medium mb-2">فیلتر Cloudflare:</label>
                     <div class="checkbox-group">
                         <input type="checkbox" id="cloudflareOnly" class="hidden">
                         <label for="cloudflareOnly" class="flex items-center justify-center"><span>فقط کانفیگ‌های Cloudflare</span></label>
@@ -145,7 +165,7 @@
                 </div>
             </div>
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-medium mb-2">فیلتر پروتکل:</label>
+                <label class="block text-sm font-medium mb-2">فیلتر پروتکل:</label>
                 <div class="checkbox-group grid grid-cols-2 gap-2">
                     <div><input type="checkbox" id="protocolAll" name="protocolFilter" value="all" class="hidden" checked><label for="protocolAll" class="justify-center"><span class="text-sm">همه پروتکل‌ها</span></label></div>
                     <div><input type="checkbox" id="protocolSS" name="protocolFilter" value="ss" class="hidden"><label for="protocolSS" class="justify-center"><span class="text-sm">Shadowsocks (SS)</span></label></div>
@@ -163,7 +183,7 @@
                     <div><input type="checkbox" id="protocolJuicity" name="protocolFilter" value="juicity" class="hidden"><label for="protocolJuicity" class="justify-center"><span class="text-sm">Juicity</span></label></div>
                 </div>
                 <div class="mt-3">
-                    <label for="customProtocols" class="block text-gray-700 text-sm font-medium mb-2 text-right">پروتکل‌های سفارشی (کاما-جدا شده):</label>
+                    <label for="customProtocols" class="block text-sm font-medium mb-2 text-right">پروتکل‌های سفارشی (کاما-جدا شده):</label>
                     <input type="text" id="customProtocols" placeholder="مثال: wireguard,ssh" class="w-full px-3 py-2 border">
                 </div>
             </div>
@@ -204,8 +224,7 @@
 const PERSONAL_WORKER_URL_KEY = 'personal_processor_worker_url';
 const THEME_KEY = 'app_theme';
 
-// =====!!! خطای شما در اینجا بود و اصلاح شد !!!=====
-// آدرس به ریپازیتوری و فایل صحیح تغییر یافت.
+// Correct URL for fetching the list of public workers
 const DONATED_WORKERS_URL = 'https://raw.githubusercontent.com/vpnclashfa-backup/SubConfigModifier/main/workers.txt';
 
 // In-memory state
