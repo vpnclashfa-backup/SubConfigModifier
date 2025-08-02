@@ -34,6 +34,10 @@
         .checkbox-group input:disabled + label { opacity: 0.6; cursor: not-allowed; box-shadow: none; } .checkbox-group input:disabled + label:hover { background-color: var(--checkbox-label-bg); }
         #convertedContentDisplay { max-height: 6em; overflow-y: auto; white-space: pre-wrap; font-family: 'Vazirmatn', monospace; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); }
         #resultLink { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; padding: 0.5rem; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); }
+        .social-icons-container { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 2rem; padding: 1rem; border-radius: 0.75rem; background-color: var(--config-filter-bg); border: 1px solid var(--config-filter-border); }
+        .social-icons-container a { display: block; width: 48px; height: 48px; border-radius: 50%; overflow: hidden; transition: transform 0.2s ease-in-out; }
+        .social-icons-container a:hover { transform: scale(1.1); }
+        .social-icons-container img { width: 100%; height: 100%; object-fit: cover; }
         .theme-toggle { position: absolute; top: 1.5rem; left: 1.5rem; cursor: pointer; }
         .footer-time { position: absolute; bottom: 1rem; right: 1.5rem; font-size: 0.875rem; color: var(--text-color-secondary); direction: ltr; }
     </style>
@@ -67,7 +71,12 @@
         <!-- Donate Worker Section -->
         <div class="mb-6 p-4 rounded-lg border" style="background-color: var(--config-filter-bg); border-color: var(--config-filter-border);">
             <label for="donateWorkerInput" class="block text-right text-sm font-medium mb-2">می‌خواهید یک ورکر عمومی اهدا کنید؟</label>
-            <p class="text-xs text-right mb-3 text-gray-500">ورکر شما به صورت خودکار تست شده و در صورت تایید به لیست عمومی اضافه می‌شود.</p>
+            <p class="text-xs text-right mb-2 text-gray-500">ورکر شما به صورت خودکار تست شده و در صورت تایید به لیست عمومی اضافه می‌شود.</p>
+            <p class="text-xs text-right mb-3 text-gray-500">
+                برای ساخت ورکر شخصی، از 
+                <a href="https://github.com/vpnclashfa-backup/SubConfigModifier/blob/main/worker.js" target="_blank" rel="noopener noreferrer" class="font-bold hover:underline" style="color: var(--input-border-focus);">کد منبع</a>
+                استفاده کنید.
+            </p>
             <div class="flex flex-col sm:flex-row gap-2">
                 <input type="text" id="donateWorkerInput" placeholder="آدرس ورکر پردازشگر شما..."
                        class="flex-grow w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -119,19 +128,19 @@
         </div>
 
         <!-- Config Filtering Options -->
-        <div class="mb-8 p-4 rounded-lg config-filter-box border text-right">
-            <h3 class="text-gray-700 text-lg font-semibold mb-4">گزینه‌های فیلتر کانفیگ (اختیاری)</h3>
+        <div class="mb-8 p-4 rounded-lg border" style="background-color: var(--config-filter-bg); border-color: var(--config-filter-border); color: var(--text-color-primary);">
+            <h3 class="text-lg font-semibold mb-4 text-right">گزینه‌های فیلتر کانفیگ (اختیاری)</h3>
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
                 <div class="w-full md:w-1/2">
-                    <label for="countInput" class="block text-gray-700 text-sm font-medium mb-2 count-label">تعداد کانفیگ‌ها:</label>
+                    <label for="countInput" class="block text-sm font-medium mb-2 text-right">تعداد کانفیگ‌ها:</label>
                     <div class="checkbox-group flex items-center gap-2">
-                        <input type="number" id="countInput" value="0" min="0" disabled class="w-24 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700">
+                        <input type="number" id="countInput" value="0" min="0" disabled class="w-24 px-3 py-2 border">
                         <input type="checkbox" id="unlimitedCount" class="hidden" checked>
                         <label for="unlimitedCount" class="flex-grow justify-center"><span id="unlimitedCountLabelText">نامحدود</span></label>
                     </div>
                 </div>
                 <div class="w-full md:w-1/2 md:mt-0 mt-4">
-                    <label class="block text-gray-700 text-sm font-medium mb-2">فیلتر Cloudflare:</label>
+                    <label class="block text-sm font-medium mb-2 text-right">فیلتر Cloudflare:</label>
                     <div class="checkbox-group">
                         <input type="checkbox" id="cloudflareOnly" class="hidden">
                         <label for="cloudflareOnly" class="flex items-center justify-center"><span>فقط کانفیگ‌های Cloudflare</span></label>
@@ -139,9 +148,8 @@
                 </div>
             </div>
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-medium mb-2">فیلتر پروتکل:</label>
+                <label class="block text-sm font-medium mb-2 text-right">فیلتر پروتکل:</label>
                 <div class="checkbox-group grid grid-cols-2 gap-2">
-                    <!-- Protocol checkboxes -->
                     <div><input type="checkbox" id="protocolAll" name="protocolFilter" value="all" class="hidden" checked><label for="protocolAll" class="justify-center"><span class="text-sm">همه پروتکل‌ها</span></label></div>
                     <div><input type="checkbox" id="protocolSS" name="protocolFilter" value="ss" class="hidden"><label for="protocolSS" class="justify-center"><span class="text-sm">Shadowsocks (SS)</span></label></div>
                     <div><input type="checkbox" id="protocolSSR" name="protocolFilter" value="ssr" class="hidden"><label for="protocolSSR" class="justify-center"><span class="text-sm">ShadowsocksR (SSR)</span></label></div>
@@ -158,15 +166,15 @@
                     <div><input type="checkbox" id="protocolJuicity" name="protocolFilter" value="juicity" class="hidden"><label for="protocolJuicity" class="justify-center"><span class="text-sm">Juicity</span></label></div>
                 </div>
                 <div class="mt-3">
-                    <label for="customProtocols" class="block text-gray-700 text-sm font-medium mb-2">پروتکل‌های سفارشی (کاما-جدا شده):</label>
-                    <input type="text" id="customProtocols" placeholder="مثال: wireguard,ssh" class="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700">
+                    <label for="customProtocols" class="block text-sm font-medium mb-2 text-right">پروتکل‌های سفارشی (کاما-جدا شده):</label>
+                    <input type="text" id="customProtocols" placeholder="مثال: wireguard,ssh" class="w-full px-3 py-2 border">
                 </div>
             </div>
         </div>
 
         <button id="processButton" class="w-full bg-indigo-600 text-white py-3 px-6 rounded-xl text-lg font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-md">پردازش</button>
         <div id="loadingMessage" class="mt-4 text-indigo-600 hidden"><p>در حال پردازش...</p></div>
-        <div id="resultArea" class="mt-8 p-4 rounded-xl hidden flex flex-col gap-4">
+        <div id="resultArea" class="mt-8 p-4 rounded-xl hidden flex flex-col gap-4" style="background-color: var(--result-content-bg); border: 1px solid var(--result-content-border);">
             <div id="linkResultContainer" class="mb-4 hidden">
                 <p class="text-gray-700 text-right mb-2">لینک قابل اشتراک‌گذاری:</p>
                 <a id="resultLink" href="#" target="_blank" class="result-area text-indigo-600 hover:underline"></a>
@@ -182,12 +190,14 @@
             </div>
             <div id="copyMessage" class="text-green-600 text-sm mt-2 hidden"></div>
         </div>
-        <div id="errorMessage" class="mt-8 p-4 bg-red-100 border border-red-200 rounded-xl text-red-700 hidden"><p>خطا: <span id="errorText"></span></p></div>
+        <div id="errorMessage" class="mt-8 p-4 rounded-xl text-red-700 hidden" style="background-color: var(--error-bg); border: 1px solid var(--error-text);"><p>خطا: <span id="errorText"></span></p></div>
 
         <!-- Social Media Links -->
-        <div class="flex justify-center items-center gap-4 mt-8">
-            <a href="https://t.me/vpnclashfa" target="_blank"><img src="https://cdn.dribbble.com/users/4507400/screenshots/15420681/media/c00f77bc443cbc4ac96d138f9ac854c5.gif" alt="Telegram" class="w-12 h-12 rounded-full"></a>
-            <a href="https://twitter.com/coldwater_10" target="_blank"><img src="https://cdn.dribbble.com/users/2652449/screenshots/14764078/media/2b620382444946ce84aac0a132c40063.gif" alt="Twitter" class="w-12 h-12 rounded-full"></a>
+        <div class="social-icons-container">
+            <a href="https://t.me/vpnclashfa" target="_blank" aria-label="Telegram"> <img src="https://cdn.dribbble.com/users/4507400/screenshots/15420681/media/c00f77bc443cbc4ac96d138f9ac854c5.gif" alt="Telegram"> </a>
+            <a href="https://twitter.com/coldwater_10" target="_blank" aria-label="Twitter"> <img src="https://cdn.dribbble.com/users/2652449/screenshots/14764078/media/2b620382444946ce84aac0a132c40063.gif" alt="Twitter"> </a>
+            <a href="https://www.tvtime.com/en/user/43351079/profile" target="_blank" aria-label="TvTime"> <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExOTFhMDk5NzJlYzdmZTJjMDM2Y2MzMjBkOTVkODAxM2FjMTdjZGMwNSZlcD12MV9pbnRlcm5hbF9naWZzX2dpZklkJmN0PWc/lj1ghwUoflkw2F3o0T/giphy.gif" alt="TvTime"> </a>
+            <a href="https://linktr.ee/coldwater_10" target="_blank" aria-label="Linktree"> <img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExdGZrdHVxaGkycXV5M2g2emdvdHkwOWVvOHI5YWR3cTVtODJtbGQwcCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/U3ig2IVcuNn6VgU3oO/giphy.gif" alt="linktr"> </a>
         </div>
         <div id="tehranTime" class="footer-time"></div>
     </div>
@@ -196,7 +206,7 @@
 // ===== CONFIGURATION & CONSTANTS =====
 const PERSONAL_WORKER_URL_KEY = 'personal_processor_worker_url';
 const THEME_KEY = 'app_theme';
-const DONATION_MANAGER_WORKER_URL = "https://modifier.pcwwrk.workers.dev";
+const DONATION_MANAGER_WORKER_URL = "https://donationmanager.pcwwrk.workers.dev/";
 
 // In-memory state
 let donatedWorkersCache = [];
@@ -284,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!urlToDonate || !urlToDonate.startsWith('https://')) { allElements.donateWorkerMessage.innerHTML = 'لطفاً یک آدرس ورکر معتبر (شروع با https://) وارد کنید.'; allElements.donateWorkerMessage.style.color = 'var(--error-text)'; allElements.donateWorkerMessage.classList.remove('hidden'); return; }
         allElements.donateWorkerButton.disabled = true; allElements.donateWorkerButton.textContent = 'در حال ارسال و تست...'; allElements.donateWorkerMessage.classList.add('hidden');
         try {
-            const response = await fetch(`${DONATION_MANAGER_WORKER_URL}/donate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: urlToDonate }) });
+            const response = await fetch(`${DONATION_MANAGER_WORKER_URL}donate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: urlToDonate }) });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || 'یک خطای ناشناخته رخ داد.');
             allElements.donateWorkerMessage.innerHTML = `✅ ${result.message}`; allElements.donateWorkerMessage.style.color = 'var(--button-secondary-bg)'; allElements.donateWorkerInput.value = '';
