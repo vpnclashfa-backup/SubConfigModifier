@@ -119,11 +119,11 @@
         <div id="inputContainer" class="mb-6">
             <div id="linkInputContainer">
                 <label for="urlInput" class="block text-gray-700 text-right text-sm font-medium mb-2">لینک‌های اشتراک (هر لینک در یک خط):</label>
-                <textarea id="urlInput" rows="6" placeholder="https://...&#10;ssconf://...&#10;vless://...&#10;vmess://...&#10;trojan://..." class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700"></textarea>
+                <textarea id="urlInput" rows="6" placeholder="https://...&#10;http://..." class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700"></textarea>
             </div>
             <div id="textInputContainer" class="hidden">
                 <label for="textInput" class="block text-gray-700 text-right text-sm font-medium mb-2">متن مورد نظر:</label>
-                <textarea id="textInput" rows="6" placeholder="vless://...&#10;ss://...&#10;trojan://...&#10;...لیست کانفیگ‌های خود را اینجا وارد کنید" class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700"></textarea>
+                <textarea id="textInput" rows="6" placeholder="vless://...&#10;ss://...&#10;trojan://...&#10;ssconf://...&#10;...لیست کانفیگ‌های خود را اینجا وارد کنید" class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700"></textarea>
             </div>
             <div id="fileInputContainer" class="hidden">
                 <label for="fileInput" class="block text-gray-700 text-right text-sm font-medium mb-2">فایل مورد نظر:</label>
@@ -204,6 +204,10 @@
                 <p class="text-gray-700 text-right mb-2">محتوای تبدیل شده:</p>
                 <pre id="convertedContentDisplay" class="result-area text-gray-800 text-sm p-2 rounded-lg"></pre>
             </div>
+            
+            <!-- Protocol Stats Container -->
+            <div id="protocolStatsContainer" class="mt-4 text-right"></div>
+
             <div class="flex flex-col md:flex-row justify-center gap-4 mt-4">
                 <button id="copyLinkButton" class="bg-indigo-500 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">کپی لینک</button>
                 <button id="copyContentButton" class="bg-indigo-500 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">کپی محتوا</button>
@@ -279,6 +283,59 @@ function readFileAsArrayBuffer(file) { return new Promise((resolve, reject) => {
 function arrayBufferToBase64(buffer) { let binary = ''; const bytes = new Uint8Array(buffer); for (let i = 0; i < bytes.byteLength; i++) { binary += String.fromCharCode(bytes[i]); } return window.btoa(binary); }
 function downloadFile(filename, content, mimeType) { try { const blob = new Blob([content], { type: mimeType }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); } catch (error) { document.getElementById('errorText').textContent = 'خطا در دانلود فایل: ' + error.message; document.getElementById('errorMessage').classList.remove('hidden'); } }
 
+/**
+ * Counts protocols from the output content and displays stats in the UI.
+ * @param {string} content - The final text content with configs.
+ */
+function displayProtocolStats(content) {
+    const statsContainer = document.getElementById('protocolStatsContainer');
+    statsContainer.innerHTML = '';
+    if (!content) return;
+
+    const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+    const totalCount = lines.length;
+    if (totalCount === 0) return;
+
+    const protocolCounts = {};
+    const protocolRegex = /^([a-z0-9]+):\/\//i;
+
+    lines.forEach(line => {
+        const match = line.match(protocolRegex);
+        if (match) {
+            let protocol = match[1].toLowerCase();
+            if (protocol === 'hy2') protocol = 'hysteria2'; // Alias hy2 to hysteria2
+            
+            protocolCounts[protocol] = (protocolCounts[protocol] || 0) + 1;
+        }
+    });
+
+    const protocolColors = {
+        vless: 'bg-blue-500', trojan: 'bg-green-500', ss: 'bg-purple-500', vmess: 'bg-yellow-500 text-black',
+        hysteria2: 'bg-red-500', tuic: 'bg-pink-500', ssr: 'bg-indigo-500', juicity: 'bg-lime-500',
+        default: 'bg-gray-500'
+    };
+    
+    let statsHtml = `<h4 class="font-bold mb-3">آمار کانفیگ‌های خروجی:</h4>`;
+    statsHtml += `<p class="mb-4 font-semibold">تعداد کل: <span class="text-indigo-600 dark:text-indigo-400">${totalCount}</span></p>`;
+    statsHtml += '<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">';
+
+    const sortedProtocols = Object.keys(protocolCounts).sort((a, b) => protocolCounts[b] - protocolCounts[a]);
+
+    for (const protocol of sortedProtocols) {
+        const count = protocolCounts[protocol];
+        const color = protocolColors[protocol] || protocolColors.default;
+        statsHtml += `
+            <div class="flex items-center justify-between p-2 rounded-lg" style="background-color: var(--checkbox-label-hover-bg);">
+                <span class="text-sm font-semibold uppercase">${protocol}</span>
+                <span class="text-white text-xs font-bold px-2 py-1 rounded-full ${color}">${count}</span>
+            </div>
+        `;
+    }
+    statsHtml += '</div>';
+    statsContainer.innerHTML = statsHtml;
+}
+
+
 // ===== INITIALIZATION & DOM EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', () => {
     // --- Element Selectors ---
@@ -317,30 +374,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (changedCheckbox.id === 'protocolAll') {
             if (changedCheckbox.checked) {
-                // If "All Protocols" is checked, uncheck all others.
-                specificCheckboxes.forEach(cb => {
-                    cb.checked = false;
-                });
+                specificCheckboxes.forEach(cb => { cb.checked = false; });
             }
         } else {
-            // If any other checkbox is checked, uncheck "All Protocols".
             if (changedCheckbox.checked) {
                 allElements.protocolAllCheckbox.checked = false;
             }
         }
         
-        // If no specific checkbox is checked, check "All Protocols" automatically.
         const anySpecificChecked = specificCheckboxes.some(cb => cb.checked);
-        if (!anySpecificChecked) {
+        if (!anySpecificChecked && !allElements.protocolAllCheckbox.checked) {
             allElements.protocolAllCheckbox.checked = true;
         }
-
-        // Enable/disable logic is removed to allow multiple selections.
-        // The logic now correctly handles unchecking "All" when a specific is chosen,
-        // and re-checking "All" when all specifics are un-chosen.
     }
     allElements.protocolCheckboxes.forEach(checkbox => checkbox.addEventListener('change', handleProtocolCheckboxChange));
-    // Initial setup call to ensure correct state on page load
     if (allElements.protocolAllCheckbox.checked) {
         Array.from(allElements.protocolCheckboxes).filter(cb => cb.id !== 'protocolAll').forEach(cb => cb.checked = false);
     }
@@ -359,7 +406,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         allElements.resultArea.classList.add('hidden'); 
         allElements.errorMessage.classList.add('hidden'); 
-        allElements.copyMessage.classList.add('hidden'); 
+        allElements.copyMessage.classList.add('hidden');
+        document.getElementById('protocolStatsContainer').innerHTML = '';
         allElements.loadingMessage.classList.remove('hidden'); 
         allElements.processButton.disabled = true;
 
@@ -371,13 +419,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const links = allElements.urlInput.value.split('\n').map(link => link.trim()).filter(Boolean);
                 if (links.length === 0) throw new Error('لطفاً حداقل یک لینک معتبر وارد کنید.');
                 
-                // Construct the dynamic GET URL
                 const workerBase = processorWorkerUrl.endsWith('/') ? processorWorkerUrl : processorWorkerUrl + '/';
                 const path = allElements.pathInput.value.trim();
                 let finalUrl = workerBase + path;
                 
                 const params = new URLSearchParams();
-                // Use 'urls' for multi-link, 'url' for single link for backward compatibility in worker
                 if (links.length > 1) {
                     params.append('urls', links.join('|'));
                 } else {
@@ -395,7 +441,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 allElements.resultLink.textContent = finalUrl;
                 allElements.resultLink.href = finalUrl;
                 
-                // Fetch the content from the newly created link for preview
                 const contentResponse = await fetch(finalUrl);
                 if (!contentResponse.ok) throw new Error(`خطا در دریافت محتوا از لینک جدید: ${contentResponse.status} - ${await contentResponse.text()}`);
                 downloadContentForButton = await contentResponse.text();
@@ -436,7 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 downloadContentForButton = resultJson.content;
                 downloadMimeTypeForButton = resultJson.mimeType || 'application/octet-stream';
-                allElements.linkResultContainer.classList.add('hidden'); // Hide link result for non-link inputs
+                allElements.linkResultContainer.classList.add('hidden');
             }
 
             allElements.convertedContentDisplay.textContent = downloadContentForButton;
@@ -444,6 +489,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (downloadMimeTypeForButton.includes('text') && !downloadFilenameForButton.endsWith('.txt')) {
                 downloadFilenameForButton += '.txt';
             }
+            
+            // Display the protocol stats
+            displayProtocolStats(downloadContentForButton);
+
             allElements.resultArea.classList.remove('hidden');
 
         } catch (e) {
