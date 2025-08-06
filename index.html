@@ -37,8 +37,8 @@
         .checkbox-group input:disabled + label { opacity: 0.6; cursor: not-allowed; box-shadow: none; } .checkbox-group input:disabled + label:hover { background-color: var(--checkbox-label-bg); }
         #convertedContentDisplay { max-height: 6em; overflow-y: auto; white-space: pre-wrap; font-family: 'Vazirmatn', monospace; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); direction: ltr; text-align: left; }
         #resultLink { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; padding: 0.5rem; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); }
-        .stats-card { background-color: var(--stats-card-bg); border: 1px solid var(--stats-card-border); border-radius: 0.75rem; padding: 1rem; margin-top: 1rem; text-align: right; }
-        .stats-card h4 { font-weight: bold; margin-bottom: 0.75rem; }
+        .stats-card { background-color: var(--stats-card-bg); border: 1px solid var(--stats-card-border); border-radius: 0.75rem; padding: 1rem; margin-top: 1rem; text-align: right; color: var(--text-color-primary); }
+        .stats-card h4 { font-weight: bold; margin-bottom: 0.75rem; color: var(--text-color-primary);}
         .stats-card ul { list-style: none; padding-right: 0; }
         .stats-card .source-card { background-color: var(--config-filter-bg); border: 1px solid var(--config-filter-border); border-radius: 0.5rem; padding: 0.75rem; margin-top: 0.5rem; }
         .stats-card .source-link { color: var(--stats-link-color); font-weight: 500; word-break: break-all; }
@@ -245,7 +245,43 @@ let timedOutWorkers = new Set();
 let downloadContentForButton = '', downloadMimeTypeForButton = '', downloadFilenameForButton = '';
 
 // ===== HELPER & CORE LOGIC FUNCTIONS =====
-async function setupProcessorWorkerUrl() { /* ... unchanged ... */ }
+async function setupProcessorWorkerUrl() { /* This function is large and unchanged, so it's omitted for brevity */ 
+    const processorWorkerInput = document.getElementById('processorWorkerInput');
+    const suggestedWorkerMessage = document.getElementById('suggestedWorkerMessage');
+
+    const personalWorker = localStorage.getItem(PERSONAL_WORKER_URL_KEY);
+    if (personalWorker) {
+        processorWorkerInput.value = personalWorker;
+        suggestedWorkerMessage.classList.add('hidden');
+        return;
+    }
+
+    try {
+        const response = await fetch(DONATED_WORKERS_URL, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Failed to fetch workers list: ${response.status}`);
+        const workerText = await response.text();
+        const urls = workerText.split('\n').map(line => line.trim()).filter(line => line.startsWith('https://'));
+        
+        if (urls.length === 0) {
+            processorWorkerInput.placeholder = "لیست ورکر عمومی خالی است.";
+            return;
+        }
+
+        donatedWorkersCache = urls;
+        const availableWorkers = donatedWorkersCache.filter(url => !timedOutWorkers.has(url));
+
+        if (availableWorkers.length > 0) {
+            const randomIndex = Math.floor(Math.random() * availableWorkers.length);
+            processorWorkerInput.value = availableWorkers[randomIndex];
+            suggestedWorkerMessage.classList.remove('hidden');
+        } else {
+             processorWorkerInput.placeholder = "تمام ورکرهای عمومی موقتا در دسترس نیستند.";
+        }
+    } catch (error) {
+        console.error('Could not fetch or suggest a donated worker:', error);
+        processorWorkerInput.placeholder = "خطا در دریافت لیست ورکرهای عمومی";
+    }
+}
 function readFileAsArrayBuffer(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = error => reject(error); reader.readAsArrayBuffer(file); }); }
 function arrayBufferToBase64(buffer) { let binary = ''; const bytes = new Uint8Array(buffer); for (let i = 0; i < bytes.byteLength; i++) { binary += String.fromCharCode(bytes[i]); } return window.btoa(binary); }
 function downloadFile(filename, content, mimeType) { try { const blob = new Blob([content], { type: mimeType }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); } catch (error) { document.getElementById('errorText').textContent = 'خطا در دانلود فایل: ' + error.message; document.getElementById('errorMessage').classList.remove('hidden'); } }
@@ -259,12 +295,11 @@ function displayStatistics(stats_before, stats_after) {
         return;
     }
 
-    // Function to render a single stats card
-    const createStatsCard = (title, stats, isAfter) => {
-        if (!stats || stats.totalConfigs === 0 && !isAfter) return '';
+    const createStatsCard = (title, stats, isAfter = false) => {
+        if (!stats || stats.total === 0 && !isAfter) return '';
 
         let cardHtml = `<div class="stats-card"><h4>${title}</h4><ul>`;
-        cardHtml += `<li><strong>تعداد کل کانفیگ‌ها:</strong> ${stats.totalConfigs}</li>`;
+        cardHtml += `<li><strong>تعداد کل کانفیگ‌ها:</strong> ${stats.total}</li>`;
         
         if (isAfter && stats.finalCount !== undefined) {
              cardHtml += `<li><strong>تعداد نهایی در خروجی:</strong> ${stats.finalCount}</li>`;
@@ -281,6 +316,7 @@ function displayStatistics(stats_before, stats_after) {
         if (stats.sourceDetails && Object.keys(stats.sourceDetails).length > 0) {
             cardHtml += `<li><strong>جزئیات هر منبع:</strong><ul>`;
             for (const [source, details] of Object.entries(stats.sourceDetails)) {
+                if (details.total === 0 && !details.error) continue; // Skip sources that contributed nothing after filtering
                 cardHtml += `<div class="source-card">`;
                 cardHtml += `<a href="${source}" target="_blank" rel="noopener noreferrer" class="source-link">${source}</a>`;
                 if (details.error) {
@@ -367,6 +403,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const allSelectedProtocols = [...new Set([...selectedProtocols, ...customProtocols])];
             
             let response;
+            let finalUrlForDisplay = '';
+
+            const fetchOptions = {
+                headers: { 'Accept': 'application/json' }
+            };
+
             if (selectedInputType === 'link') {
                 const links = allElements.urlInput.value.split('\n').map(link => link.trim()).filter(Boolean);
                 if (links.length === 0) throw new Error('لطفاً حداقل یک لینک معتبر وارد کنید.');
@@ -388,12 +430,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 params.append('cloudflareOnly', document.getElementById('cloudflareOnly').checked);
                 
                 finalUrl += `?${params.toString()}`;
+                finalUrlForDisplay = finalUrl;
 
                 allElements.linkResultContainer.classList.remove('hidden');
-                allElements.resultLink.textContent = finalUrl;
-                allElements.resultLink.href = finalUrl;
+                allElements.resultLink.textContent = finalUrlForDisplay;
+                allElements.resultLink.href = finalUrlForDisplay;
                 
-                response = await fetch(finalUrl);
+                response = await fetch(finalUrlForDisplay, fetchOptions);
 
             } else { // Handle Text and File inputs via POST
                 let contentToProcess, mimeType = 'text/plain';
@@ -417,7 +460,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     cloudflareOnly: document.getElementById('cloudflareOnly').checked
                 };
                 
-                response = await fetch(processorWorkerUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                fetchOptions.method = 'POST';
+                fetchOptions.headers['Content-Type'] = 'application/json';
+                fetchOptions.body = JSON.stringify(payload);
+                response = await fetch(processorWorkerUrl, fetchOptions);
             }
 
             if (!response.ok) { throw new Error(`خطا از ورکر: ${response.status} - ${await response.text()}`); }
