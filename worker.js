@@ -45,7 +45,7 @@ async function handleRequest(request) {
       // Apply filters
       let currentLines = allExtractedConfigs;
       if (protocols && protocols.length > 0 && !(protocols.length === 1 && protocols[0] === 'all')) {
-          const types = protocols.map(t => t.trim().toLowerCase());
+          const types = protocols.flatMap(t => t.trim().toLowerCase().split(','));
           currentLines = currentLines.filter(line => types.some(t => line.toLowerCase().startsWith(`${t}://`)));
       }
       if (cloudflareOnly) {
@@ -90,7 +90,7 @@ async function handleRequest(request) {
         const count = parseInt(url.searchParams.get('count'), 10) || 0;
         const protocols = JSON.parse(decodeURIComponent(url.searchParams.get('protocols') || '[]'));
         const cloudflareOnly = url.searchParams.get('cloudflareOnly') === 'true';
-        const downloadFlag = url.searchParams.get('download'); // <-- FIXED THIS LINE
+        const downloadFlag = url.searchParams.get('download');
         const pathFromWorkerUrl = url.pathname.substring(1);
 
         return processContentOnDemand(targetUrls, outputFormat, count, protocols, cloudflareOnly, downloadFlag, pathFromWorkerUrl, headers);
@@ -127,7 +127,7 @@ async function processContentOnDemand(targetUrls, outputFormat, count, protocols
   
   // Apply protocol filter
   if (protocols && protocols.length > 0 && !(protocols.length === 1 && protocols[0] === 'all')) {
-      const types = protocols.map(t => t.trim().toLowerCase());
+      const types = protocols.flatMap(t => t.trim().toLowerCase().split(','));
       currentLines = currentLines.filter(line => types.some(t => line.toLowerCase().startsWith(`${t}://`)));
   }
 
@@ -198,7 +198,7 @@ async function recursivelyFetchAndExtractConfigs(initialContent, initialType, ma
 
         const lines = processedContent.split('\n').map(line => line.trim()).filter(line => line);
         for (const line of lines) {
-            if (line.match(/^(vless|vmess|ss|ssr|trojan|snell|mieru|anytls|hysteria|hysteria2|tuic|wireguard|ssh|juicity):\/\//i)) {
+            if (line.match(/^(vless|vmess|ss|ssr|trojan|snell|mieru|anytls|hysteria|hysteria2|hy2|tuic|wireguard|ssh|juicity|warp|socks5|mtproto):\/\//i)) {
                 allExtractedConfigs.add(line);
             } else if (line.match(/^ssconf:\/\//i)) {
                 const httpsUrl = js_replaceSsconf(line);
