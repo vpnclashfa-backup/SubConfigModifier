@@ -211,6 +211,7 @@ async function setupProcessorWorkerUrl() {
             processorWorkerInput.placeholder = "لیست ورکر عمومی خالی است.";
             return;
         }
+        const timedOutWorkers = new Set();
         const availableWorkers = urls.filter(url => !timedOutWorkers.has(url));
         if (availableWorkers.length > 0) {
             const randomIndex = Math.floor(Math.random() * availableWorkers.length);
