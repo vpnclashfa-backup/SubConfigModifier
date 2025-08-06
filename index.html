@@ -13,13 +13,15 @@
     <style>
         :root {
             --bg-color: #f8f8ff; --container-bg: #ffffff; --text-color-primary: #333333; --text-color-secondary: #666666; --border-color: #d1d5db; --input-bg: #f9fafb; --input-border-focus: #4a90e2; --button-primary-bg: #3f51b5; --button-primary-hover: #303f9f; --button-secondary-bg: #4ade80; --button-secondary-hover: #22c55e; --blue-highlight-bg: #e3f2fd; --blue-highlight-border: #90caf9; --blue-highlight-text: #1a237e; --error-bg: #fee2e2; --error-text: #ef4444; --shadow-color: rgba(0, 0, 0, 0.15); --shadow-color-light: rgba(0, 0, 0, 0.08); --gradient-start: #4a90e2; --gradient-end: #3f51b5; --worker-url-bg: #e3f2fd; --config-filter-bg: #f3f4f6; --worker-url-border: #90caf9; --config-filter-border: #d1d5db; --checkbox-label-bg: #ffffff; --checkbox-label-hover-bg: #f3f4f6; --input-field-bg: #f9fafb; --input-field-border: #d1d5db; --result-content-bg: #f9fafb; --result-content-border: #d1d5db;
+            --stats-card-bg: #ffffff; --stats-card-border: #e5e7eb; --stats-link-color: #10b981; --stats-protocol-color: #8b5cf6;
         }
         [data-theme='dark'] {
             --bg-color: #0a0a1a; --container-bg: #1a1a3a; --text-color-primary: #ffffff; --text-color-secondary: #e0e0e0; --border-color: #404060; --input-bg: #2a2a4a; --input-border-focus: #4a90e2; --button-primary-bg: #6a00a8; --button-primary-hover: #8a2be2; --button-secondary-bg: #22c55e; --button-secondary-hover: #16a34a; --blue-highlight-bg: #1a237e; --blue-highlight-border: #4a90e2; --blue-highlight-text: #e0e7ff; --error-bg: #ef4444; --error-text: #fee2e2; --shadow-color: rgba(0, 0, 0, 0.5); --shadow-color-light: rgba(0, 0, 0, 0.3); --gradient-start: #4d0080; --gradient-end: #8000ff; --worker-url-bg: #1f1f3f; --config-filter-bg: #1f1f3f; --worker-url-border: #404060; --config-filter-border: #404060; --checkbox-label-bg: #2a2a4a; --checkbox-label-hover-bg: #3a3a5a; --input-field-bg: #2a2a4a; --input-field-border: #404060; --result-content-bg: #2a2a4a; --result-content-border: #404060;
+            --stats-card-bg: #2a2a4a; --stats-card-border: #404060; --stats-link-color: #34d399; --stats-protocol-color: #a78bfa;
         }
         body { font-family: 'Vazirmatn', sans-serif; background-color: var(--bg-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 1rem; box-sizing: border-box; transition: background-color 0.5s ease; }
         .container { background-color: var(--container-bg); border-radius: 1.5rem; box-shadow: 0 20px 25px -5px var(--shadow-color), 0 8px 10px -6px var(--shadow-color-light); padding: 2.5rem; width: 100%; max-width: 500px; text-align: center; border: 1px solid var(--border-color); transition: background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease; position: relative; }
-        h1, p, label, .result-area, .footer-time, h3 { color: var(--text-color-primary); transition: color 0.5s ease; }
+        h1, p, label, .result-area, .footer-time, h3, h4 { color: var(--text-color-primary); transition: color 0.5s ease; }
         .text-gray-600 { color: var(--text-color-secondary) !important; } .text-gray-700, .text-gray-800 { color: var(--text-color-primary) !important; } .text-gray-500 { color: var(--text-color-secondary) !important; } .text-indigo-600, .text-blue-700 { color: var(--input-border-focus) !important; }
         [data-theme='dark'] .text-indigo-400 { color: #818cf8 !important; }
         input[type="text"], textarea, input[type="file"], input[type="number"] { background-color: var(--input-field-bg); border-color: var(--input-field-border); border-width: 1px; color: var(--text-color-primary); transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; border-radius: 0.75rem; }
@@ -35,9 +37,12 @@
         .checkbox-group input:disabled + label { opacity: 0.6; cursor: not-allowed; box-shadow: none; } .checkbox-group input:disabled + label:hover { background-color: var(--checkbox-label-bg); }
         #convertedContentDisplay { max-height: 6em; overflow-y: auto; white-space: pre-wrap; font-family: 'Vazirmatn', monospace; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); direction: ltr; text-align: left; }
         #resultLink { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; padding: 0.5rem; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); }
-        #statsContainer ul { padding-right: 1.5rem; text-align: right; }
-        #statsContainer ul ul { padding-right: 1rem; }
-        #statsContainer li { margin-bottom: 0.5rem; }
+        .stats-card { background-color: var(--stats-card-bg); border: 1px solid var(--stats-card-border); border-radius: 0.75rem; padding: 1rem; margin-top: 1rem; text-align: right; }
+        .stats-card h4 { font-weight: bold; margin-bottom: 0.75rem; }
+        .stats-card ul { list-style: none; padding-right: 0; }
+        .stats-card .source-card { background-color: var(--config-filter-bg); border: 1px solid var(--config-filter-border); border-radius: 0.5rem; padding: 0.75rem; margin-top: 0.5rem; }
+        .stats-card .source-link { color: var(--stats-link-color); font-weight: 500; word-break: break-all; }
+        .stats-card .protocol-name { color: var(--stats-protocol-color); font-weight: 600; }
         .social-icons-container { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 2rem; padding: 1rem; border-radius: 0.75rem; background-color: var(--config-filter-bg); border: 1px solid var(--config-filter-border); }
         .social-icons-container a { display: block; width: 48px; height: 48px; border-radius: 50%; overflow: hidden; transition: transform 0.2s ease-in-out; }
         .social-icons-container a:hover { transform: scale(1.1); }
@@ -209,7 +214,7 @@
             </div>
              <!-- Statistics Container -->
             <div id="statsContainer" class="text-right text-sm mt-4 hidden">
-                <h3 class="text-lg font-semibold mb-2">آمار کانفیگ‌های خام (قبل از فیلتر)</h3>
+                <!-- Statistics will be rendered here by JS -->
             </div>
             <div class="flex flex-col md:flex-row justify-center gap-4 mt-4">
                 <button id="copyLinkButton" class="bg-indigo-500 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">کپی لینک</button>
@@ -245,57 +250,69 @@ function readFileAsArrayBuffer(file) { return new Promise((resolve, reject) => {
 function arrayBufferToBase64(buffer) { let binary = ''; const bytes = new Uint8Array(buffer); for (let i = 0; i < bytes.byteLength; i++) { binary += String.fromCharCode(bytes[i]); } return window.btoa(binary); }
 function downloadFile(filename, content, mimeType) { try { const blob = new Blob([content], { type: mimeType }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); } catch (error) { document.getElementById('errorText').textContent = 'خطا در دانلود فایل: ' + error.message; document.getElementById('errorMessage').classList.remove('hidden'); } }
 
-function displayStatistics(stats) {
+function displayStatistics(stats_before, stats_after) {
     const statsContainer = document.getElementById('statsContainer');
-    // Clear previous stats
-    statsContainer.innerHTML = '<h3 class="text-lg font-semibold mb-2">آمار کانفیگ‌های خام (قبل از فیلتر)</h3>';
-    
-    if (!stats) {
+    statsContainer.innerHTML = ''; // Clear previous stats
+
+    if (!stats_before) {
         statsContainer.classList.add('hidden');
         return;
     }
 
-    let html = `<ul>`;
-    // Total configs
-    html += `<li><strong>کل کانفیگ‌های شناسایی شده:</strong> ${stats.totalConfigs}</li>`;
+    // Function to render a single stats card
+    const createStatsCard = (title, stats, isAfter) => {
+        if (!stats || stats.totalConfigs === 0 && !isAfter) return '';
 
-    // Overall protocol counts
-    if (stats.protocolCounts && Object.keys(stats.protocolCounts).length > 0) {
-        html += `<li><strong>شمارش کلی پروتکل‌ها:</strong><ul>`;
-        for (const [protocol, count] of Object.entries(stats.protocolCounts).sort()) {
-            html += `<li><span class="font-semibold text-indigo-600 dark:text-indigo-400">${protocol.toUpperCase()}:</span> ${count}</li>`;
+        let cardHtml = `<div class="stats-card"><h4>${title}</h4><ul>`;
+        cardHtml += `<li><strong>تعداد کل کانفیگ‌ها:</strong> ${stats.totalConfigs}</li>`;
+        
+        if (isAfter && stats.finalCount !== undefined) {
+             cardHtml += `<li><strong>تعداد نهایی در خروجی:</strong> ${stats.finalCount}</li>`;
         }
-        html += `</ul></li>`;
-    }
 
-    // Per-source details
-    if (stats.sourceDetails && Object.keys(stats.sourceDetails).length > 0) {
-        html += `<li><strong>جزئیات هر منبع:</strong><ul>`;
-        for (const [source, details] of Object.entries(stats.sourceDetails)) {
-            const shortSource = source.length > 40 ? `${source.substring(0, 40)}...` : source;
-            html += `<li><strong class="text-blue-700 dark:text-blue-400">${shortSource}:</strong>`;
-            if (details.error) {
-                html += ` <span class="text-red-500">خطا: ${details.error}</span></li>`;
-                continue;
+        if (stats.protocolCounts && Object.keys(stats.protocolCounts).length > 0) {
+            cardHtml += `<li><strong>شمارش کلی پروتکل‌ها:</strong><ul>`;
+            for (const [protocol, count] of Object.entries(stats.protocolCounts).sort()) {
+                cardHtml += `<li><span class="protocol-name">${protocol.toUpperCase()}:</span> ${count}</li>`;
             }
-            html += ` <strong>(کل: ${details.total})</strong><ul>`;
-            for (const [protocol, count] of Object.entries(details.protocolCounts).sort()) {
-                html += `<li><span class="font-semibold text-indigo-600 dark:text-indigo-400">${protocol.toUpperCase()}:</span> ${count}</li>`;
-            }
-            html += `</ul></li>`;
+            cardHtml += `</ul></li>`;
         }
-        html += `</ul></li>`;
-    }
-    
-    html += `</ul>`;
-    statsContainer.innerHTML += html;
+
+        if (stats.sourceDetails && Object.keys(stats.sourceDetails).length > 0) {
+            cardHtml += `<li><strong>جزئیات هر منبع:</strong><ul>`;
+            for (const [source, details] of Object.entries(stats.sourceDetails)) {
+                cardHtml += `<div class="source-card">`;
+                cardHtml += `<a href="${source}" target="_blank" rel="noopener noreferrer" class="source-link">${source}</a>`;
+                if (details.error) {
+                    cardHtml += ` <span class="text-red-500"><strong>خطا:</strong> ${details.error}</span>`;
+                } else {
+                    cardHtml += ` <strong>(کل: ${details.total})</strong><ul>`;
+                    for (const [protocol, count] of Object.entries(details.protocolCounts).sort()) {
+                        cardHtml += `<li><span class="protocol-name">${protocol.toUpperCase()}:</span> ${count}</li>`;
+                    }
+                    cardHtml += `</ul>`;
+                }
+                cardHtml += `</div>`;
+            }
+            cardHtml += `</ul></li>`;
+        }
+        
+        cardHtml += `</ul></div>`;
+        return cardHtml;
+    };
+
+    let finalHtml = createStatsCard('📊 آمار کانفیگ‌های خام (قبل از فیلتر)', stats_before, false);
+    finalHtml += createStatsCard('🔬 آمار کانفیگ‌های فیلتر شده (بعد از فیلتر)', stats_after, true);
+
+    statsContainer.innerHTML = finalHtml;
     statsContainer.classList.remove('hidden');
 }
+
 
 // ===== INITIALIZATION & DOM EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', () => {
     const allElements = {
-        processorWorkerInput: document.getElementById('processorWorkerInput'), saveWorkerUrlButton: document.getElementById('saveWorkerUrlButton'), workerUrlMessage: document.getElementById('workerUrlMessage'), processButton: document.getElementById('processButton'), loadingMessage: document.getElementById('loadingMessage'), errorMessage: document.getElementById('errorMessage'), errorText: document.getElementById('errorText'), resultArea: document.getElementById('resultArea'), linkResultContainer: document.getElementById('linkResultContainer'), resultLink: document.getElementById('resultLink'), convertedContentDisplay: document.getElementById('convertedContentDisplay'), statsContainer: document.getElementById('statsContainer'), copyMessage: document.getElementById('copyMessage'), themeToggle: document.getElementById('themeToggle'), themeIcon: document.getElementById('themeIcon'), tehranTimeDisplay: document.getElementById('tehranTime'), linkInputContainer: document.getElementById('linkInputContainer'), textInputContainer: document.getElementById('textInputContainer'), fileInputContainer: document.getElementById('fileInputContainer'), unlimitedCountCheckbox: document.getElementById('unlimitedCount'), countInput: document.getElementById('countInput'), unlimitedCountLabelText: document.getElementById('unlimitedCountLabelText'), pathInput: document.getElementById('pathInput'), urlInput: document.getElementById('urlInput'),
+        processorWorkerInput: document.getElementById('processorWorkerInput'), saveWorkerUrlButton: document.getElementById('saveWorkerUrlButton'), workerUrlMessage: document.getElementById('workerUrlMessage'), processButton: document.getElementById('processButton'), loadingMessage: document.getElementById('loadingMessage'), errorMessage: document.getElementById('errorMessage'), errorText: document.getElementById('errorText'), resultArea: document.getElementById('resultArea'), linkResultContainer: document.getElementById('linkResultContainer'), resultLink: document.getElementById('resultLink'), convertedContentDisplay: document.getElementById('convertedContentDisplay'), statsContainer: document.getElementById('statsContainer'), copyMessage: document.getElementById('copyMessage'), themeToggle: document.getElementById('themeToggle'), themeIcon: document.getElementById('themeIcon'), tehranTimeDisplay: document.getElementById('tehranTime'), linkInputContainer: document.getElementById('linkInputContainer'), textInputContainer: document.getElementById('textInputContainer'), fileInputContainer: document.getElementById('fileInputContainer'), unlimitedCountCheckbox: document.getElementById('unlimitedCount'), countInput: document.getElementById('countInput'), pathInput: document.getElementById('pathInput'), urlInput: document.getElementById('urlInput'),
     };
     function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); allElements.themeIcon.textContent = theme === 'dark' ? '🌙' : '☀️'; localStorage.setItem(THEME_KEY, theme); }
     const savedTheme = localStorage.getItem(THEME_KEY) || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -407,11 +424,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const resultJson = await response.json();
             if (resultJson.error) { throw new Error(`خطای ورکر: ${resultJson.error}`); }
             
-            downloadContentForButton = resultJson.content;
+            downloadContentForButton = resultJson.finalContent;
             downloadMimeTypeForButton = resultJson.mimeType || 'text/plain';
             allElements.convertedContentDisplay.textContent = downloadContentForButton;
             
-            displayStatistics(resultJson.statistics);
+            displayStatistics(resultJson.stats_before, resultJson.stats_after);
             
             downloadFilenameForButton = allElements.pathInput.value.trim() || 'output.txt';
             allElements.resultArea.classList.remove('hidden');
@@ -431,7 +448,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('downloadButton').addEventListener('click', () => { if (downloadContentForButton) { downloadFile(downloadFilenameForButton, downloadContentForButton, downloadMimeTypeForButton); } });
 });
 
-// To set up the worker URL on first load
 setupProcessorWorkerUrl();
 </script>
 </body>
