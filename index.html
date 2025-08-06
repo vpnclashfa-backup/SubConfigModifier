@@ -33,7 +33,7 @@
         .radio-group label:hover, .checkbox-group label:hover { background-color: var(--checkbox-label-hover-bg); }
         .radio-group input:checked + label, .checkbox-group input:checked + label { border-color: var(--input-border-focus); background-color: var(--blue-highlight-bg); color: var(--blue-highlight-text); }
         .checkbox-group input:disabled + label { opacity: 0.6; cursor: not-allowed; box-shadow: none; } .checkbox-group input:disabled + label:hover { background-color: var(--checkbox-label-bg); }
-        #convertedContentDisplay { max-height: 6em; overflow-y: auto; white-space: pre-wrap; font-family: 'Vazirmatn', monospace; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); }
+        #convertedContentDisplay { max-height: 6em; overflow-y: auto; white-space: pre-wrap; font-family: 'Vazirmatn', monospace; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); direction: ltr; text-align: left; }
         #resultLink { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; padding: 0.5rem; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); }
         .social-icons-container { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 2rem; padding: 1rem; border-radius: 0.75rem; background-color: var(--config-filter-bg); border: 1px solid var(--config-filter-border); }
         .social-icons-container a { display: block; width: 48px; height: 48px; border-radius: 50%; overflow: hidden; transition: transform 0.2s ease-in-out; }
@@ -119,11 +119,11 @@
         <div id="inputContainer" class="mb-6">
             <div id="linkInputContainer">
                 <label for="urlInput" class="block text-gray-700 text-right text-sm font-medium mb-2">لینک‌های اشتراک (هر لینک در یک خط):</label>
-                <textarea id="urlInput" rows="6" placeholder="https://...&#10;ssconf://...&#10;https://..." class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700"></textarea>
+                <textarea id="urlInput" rows="6" placeholder="https://...&#10;ssconf://...&#10;vless://...&#10;vmess://...&#10;trojan://..." class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700"></textarea>
             </div>
             <div id="textInputContainer" class="hidden">
                 <label for="textInput" class="block text-gray-700 text-right text-sm font-medium mb-2">متن مورد نظر:</label>
-                <textarea id="textInput" rows="6" placeholder="متن خود را اینجا وارد کنید..." class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700"></textarea>
+                <textarea id="textInput" rows="6" placeholder="vless://...&#10;ss://...&#10;trojan://...&#10;...لیست کانفیگ‌های خود را اینجا وارد کنید" class="w-full px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700"></textarea>
             </div>
             <div id="fileInputContainer" class="hidden">
                 <label for="fileInput" class="block text-gray-700 text-right text-sm font-medium mb-2">فایل مورد نظر:</label>
@@ -170,17 +170,21 @@
                     <div><input type="checkbox" id="protocolAll" name="protocolFilter" value="all" class="hidden" checked><label for="protocolAll" class="justify-center"><span class="text-sm">همه پروتکل‌ها</span></label></div>
                     <div><input type="checkbox" id="protocolSS" name="protocolFilter" value="ss" class="hidden"><label for="protocolSS" class="justify-center"><span class="text-sm">Shadowsocks (SS)</span></label></div>
                     <div><input type="checkbox" id="protocolSSR" name="protocolFilter" value="ssr" class="hidden"><label for="protocolSSR" class="justify-center"><span class="text-sm">ShadowsocksR (SSR)</span></label></div>
-                    <div><input type="checkbox" id="protocolMieru" name="protocolFilter" value="mieru" class="hidden"><label for="protocolMieru" class="justify-center"><span class="text-sm">Mieru</span></label></div>
-                    <div><input type="checkbox" id="protocolSnell" name="protocolFilter" value="snell" class="hidden"><label for="protocolSnell" class="justify-center"><span class="text-sm">Snell</span></label></div>
                     <div><input type="checkbox" id="protocolVMess" name="protocolFilter" value="vmess" class="hidden"><label for="protocolVMess" class="justify-center"><span class="text-sm">VMess</span></label></div>
                     <div><input type="checkbox" id="protocolVLESS" name="protocolFilter" value="vless" class="hidden"><label for="protocolVLESS" class="justify-center"><span class="text-sm">VLESS</span></label></div>
                     <div><input type="checkbox" id="protocolTrojan" name="protocolFilter" value="trojan" class="hidden"><label for="protocolTrojan" class="justify-center"><span class="text-sm">Trojan</span></label></div>
-                    <div><input type="checkbox" id="protocolAnyTLS" name="protocolFilter" value="anytls" class="hidden"><label for="protocolAnyTLS" class="justify-center"><span class="text-sm">AnyTLS</span></label></div>
-                    <div><input type="checkbox" id="protocolHysteria" name="protocolFilter" value="hysteria,hysteria2" class="hidden"><label for="protocolHysteria" class="justify-center"><span class="text-sm">Hysteria/2</span></label></div>
+                    <div><input type="checkbox" id="protocolHysteria" name="protocolFilter" value="hysteria" class="hidden"><label for="protocolHysteria" class="justify-center"><span class="text-sm">Hysteria</span></label></div>
+                    <div><input type="checkbox" id="protocolHysteria2" name="protocolFilter" value="hysteria2,hy2" class="hidden"><label for="protocolHysteria2" class="justify-center"><span class="text-sm">Hysteria2</span></label></div>
                     <div><input type="checkbox" id="protocolTUIC" name="protocolFilter" value="tuic" class="hidden"><label for="protocolTUIC" class="justify-center"><span class="text-sm">TUIC</span></label></div>
+                    <div><input type="checkbox" id="protocolJuicity" name="protocolFilter" value="juicity" class="hidden"><label for="protocolJuicity" class="justify-center"><span class="text-sm">Juicity</span></label></div>
+                    <div><input type="checkbox" id="protocolSnell" name="protocolFilter" value="snell" class="hidden"><label for="protocolSnell" class="justify-center"><span class="text-sm">Snell</span></label></div>
+                    <div><input type="checkbox" id="protocolMieru" name="protocolFilter" value="mieru" class="hidden"><label for="protocolMieru" class="justify-center"><span class="text-sm">Mieru</span></label></div>
+                    <div><input type="checkbox" id="protocolAnyTLS" name="protocolFilter" value="anytls" class="hidden"><label for="protocolAnyTLS" class="justify-center"><span class="text-sm">AnyTLS</span></label></div>
                     <div><input type="checkbox" id="protocolWireGuard" name="protocolFilter" value="wireguard" class="hidden"><label for="protocolWireGuard" class="justify-center"><span class="text-sm">WireGuard</span></label></div>
                     <div><input type="checkbox" id="protocolSSH" name="protocolFilter" value="ssh" class="hidden"><label for="protocolSSH" class="justify-center"><span class="text-sm">SSH</span></label></div>
-                    <div><input type="checkbox" id="protocolJuicity" name="protocolFilter" value="juicity" class="hidden"><label for="protocolJuicity" class="justify-center"><span class="text-sm">Juicity</span></label></div>
+                    <div><input type="checkbox" id="protocolWarp" name="protocolFilter" value="warp" class="hidden"><label for="protocolWarp" class="justify-center"><span class="text-sm">Warp</span></label></div>
+                    <div><input type="checkbox" id="protocolSocks5" name="protocolFilter" value="socks5" class="hidden"><label for="protocolSocks5" class="justify-center"><span class="text-sm">Socks5</span></label></div>
+                    <div><input type="checkbox" id="protocolMTProto" name="protocolFilter" value="mtproto" class="hidden"><label for="protocolMTProto" class="justify-center"><span class="text-sm">MTProto</span></label></div>
                 </div>
                 <div class="mt-3">
                     <label for="customProtocols" class="block text-sm font-medium mb-2 text-right">پروتکل‌های سفارشی (کاما-جدا شده):</label>
@@ -305,18 +309,42 @@ document.addEventListener('DOMContentLoaded', () => {
         allElements.unlimitedCountLabelText.textContent = allElements.unlimitedCountCheckbox.checked ? 'نامحدود' : 'محدود';
         if (allElements.unlimitedCountCheckbox.checked) allElements.countInput.value = 0;
     });
-    allElements.protocolCheckboxes.forEach(checkbox => checkbox.addEventListener('change', () => {
-        const isAll = checkbox.id === 'protocolAll';
+
+    // --- Protocol Checkbox Logic ---
+    function handleProtocolCheckboxChange(event) {
+        const changedCheckbox = event.target;
         const specificCheckboxes = Array.from(allElements.protocolCheckboxes).filter(cb => cb.id !== 'protocolAll');
-        if (isAll && checkbox.checked) { specificCheckboxes.forEach(cb => { cb.checked = false; cb.disabled = true; });
+
+        if (changedCheckbox.id === 'protocolAll') {
+            if (changedCheckbox.checked) {
+                // If "All Protocols" is checked, uncheck all others.
+                specificCheckboxes.forEach(cb => {
+                    cb.checked = false;
+                });
+            }
         } else {
-             specificCheckboxes.forEach(cb => { cb.disabled = false; });
-            const anySpecificChecked = specificCheckboxes.some(cb => cb.checked);
-            allElements.protocolAllCheckbox.disabled = anySpecificChecked;
-            if (anySpecificChecked) allElements.protocolAllCheckbox.checked = false;
+            // If any other checkbox is checked, uncheck "All Protocols".
+            if (changedCheckbox.checked) {
+                allElements.protocolAllCheckbox.checked = false;
+            }
         }
-    }));
-    if (allElements.protocolAllCheckbox.checked) { Array.from(allElements.protocolCheckboxes).filter(cb => cb.id !== 'protocolAll').forEach(cb => cb.disabled = true); }
+        
+        // If no specific checkbox is checked, check "All Protocols" automatically.
+        const anySpecificChecked = specificCheckboxes.some(cb => cb.checked);
+        if (!anySpecificChecked) {
+            allElements.protocolAllCheckbox.checked = true;
+        }
+
+        // Enable/disable logic is removed to allow multiple selections.
+        // The logic now correctly handles unchecking "All" when a specific is chosen,
+        // and re-checking "All" when all specifics are un-chosen.
+    }
+    allElements.protocolCheckboxes.forEach(checkbox => checkbox.addEventListener('change', handleProtocolCheckboxChange));
+    // Initial setup call to ensure correct state on page load
+    if (allElements.protocolAllCheckbox.checked) {
+        Array.from(allElements.protocolCheckboxes).filter(cb => cb.id !== 'protocolAll').forEach(cb => cb.checked = false);
+    }
+
 
     // --- Core Action Listeners ---
     allElements.saveWorkerUrlButton.addEventListener('click', () => {
