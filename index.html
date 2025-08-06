@@ -133,9 +133,9 @@
 
         <!-- Path Input Field -->
         <div class="mb-6" id="pathInputSection">
-            <label for="pathInput" class="block text-gray-700 text-right text-sm font-medium mb-2">نام فایل خروجی:</label>
+            <label for="pathInput" class="block text-gray-700 text-right text-sm font-medium mb-2">نام فایل خروجی / مسیر URL:</label>
             <input type="text" id="pathInput" value="output.txt" class="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700" placeholder="مثال: my-configs.txt">
-            <p class="text-xs text-gray-500 text-right mt-1">این نام برای فایلی که دانلود می‌کنید استفاده می‌شود.</p>
+            <p class="text-xs text-gray-500 text-right mt-1">برای لینک‌ها، این مسیر در آدرس ورکر استفاده می‌شود. برای متن/فایل، نام فایل پیشنهادی برای دانلود است.</p>
         </div>
 
         <!-- Output Format Selection -->
@@ -224,7 +224,6 @@
 const PERSONAL_WORKER_URL_KEY = 'personal_processor_worker_url';
 const THEME_KEY = 'app_theme';
 
-// Correct URL for fetching the list of public workers
 const DONATED_WORKERS_URL = 'https://raw.githubusercontent.com/vpnclashfa-backup/SubConfigModifier/main/workers.txt';
 
 // In-memory state
@@ -247,9 +246,7 @@ async function setupProcessorWorkerUrl() {
 
     try {
         const response = await fetch(DONATED_WORKERS_URL, { cache: "no-store" });
-        if (!response.ok) {
-            throw new Error(`Failed to fetch workers list: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Failed to fetch workers list: ${response.status}`);
         const workerText = await response.text();
         const urls = workerText.split('\n').map(line => line.trim()).filter(line => line.startsWith('https://'));
         
@@ -263,8 +260,7 @@ async function setupProcessorWorkerUrl() {
 
         if (availableWorkers.length > 0) {
             const randomIndex = Math.floor(Math.random() * availableWorkers.length);
-            const suggestedWorker = availableWorkers[randomIndex];
-            processorWorkerInput.value = suggestedWorker;
+            processorWorkerInput.value = availableWorkers[randomIndex];
             suggestedWorkerMessage.classList.remove('hidden');
         } else {
              processorWorkerInput.placeholder = "تمام ورکرهای عمومی موقتا در دسترس نیستند.";
@@ -275,7 +271,6 @@ async function setupProcessorWorkerUrl() {
     }
 }
 
-// --- Other helper functions ---
 function readFileAsArrayBuffer(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = error => reject(error); reader.readAsArrayBuffer(file); }); }
 function arrayBufferToBase64(buffer) { let binary = ''; const bytes = new Uint8Array(buffer); for (let i = 0; i < bytes.byteLength; i++) { binary += String.fromCharCode(bytes[i]); } return window.btoa(binary); }
 function downloadFile(filename, content, mimeType) { try { const blob = new Blob([content], { type: mimeType }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); } catch (error) { document.getElementById('errorText').textContent = 'خطا در دانلود فایل: ' + error.message; document.getElementById('errorMessage').classList.remove('hidden'); } }
@@ -284,7 +279,7 @@ function downloadFile(filename, content, mimeType) { try { const blob = new Blob
 document.addEventListener('DOMContentLoaded', () => {
     // --- Element Selectors ---
     const allElements = {
-        processorWorkerInput: document.getElementById('processorWorkerInput'), saveWorkerUrlButton: document.getElementById('saveWorkerUrlButton'), workerUrlMessage: document.getElementById('workerUrlMessage'), processButton: document.getElementById('processButton'), loadingMessage: document.getElementById('loadingMessage'), errorMessage: document.getElementById('errorMessage'), errorText: document.getElementById('errorText'), resultArea: document.getElementById('resultArea'), linkResultContainer: document.getElementById('linkResultContainer'), resultLink: document.getElementById('resultLink'), convertedContentDisplay: document.getElementById('convertedContentDisplay'), copyMessage: document.getElementById('copyMessage'), themeToggle: document.getElementById('themeToggle'), themeIcon: document.getElementById('themeIcon'), tehranTimeDisplay: document.getElementById('tehranTime'), suggestedWorkerMessage: document.getElementById('suggestedWorkerMessage'), linkInputContainer: document.getElementById('linkInputContainer'), textInputContainer: document.getElementById('textInputContainer'), fileInputContainer: document.getElementById('fileInputContainer'), unlimitedCountCheckbox: document.getElementById('unlimitedCount'), countInput: document.getElementById('countInput'), unlimitedCountLabelText: document.getElementById('unlimitedCountLabelText'), protocolAllCheckbox: document.getElementById('protocolAll'), protocolCheckboxes: document.querySelectorAll('input[name="protocolFilter"]'),
+        processorWorkerInput: document.getElementById('processorWorkerInput'), saveWorkerUrlButton: document.getElementById('saveWorkerUrlButton'), workerUrlMessage: document.getElementById('workerUrlMessage'), processButton: document.getElementById('processButton'), loadingMessage: document.getElementById('loadingMessage'), errorMessage: document.getElementById('errorMessage'), errorText: document.getElementById('errorText'), resultArea: document.getElementById('resultArea'), linkResultContainer: document.getElementById('linkResultContainer'), resultLink: document.getElementById('resultLink'), convertedContentDisplay: document.getElementById('convertedContentDisplay'), copyMessage: document.getElementById('copyMessage'), themeToggle: document.getElementById('themeToggle'), themeIcon: document.getElementById('themeIcon'), tehranTimeDisplay: document.getElementById('tehranTime'), suggestedWorkerMessage: document.getElementById('suggestedWorkerMessage'), linkInputContainer: document.getElementById('linkInputContainer'), textInputContainer: document.getElementById('textInputContainer'), fileInputContainer: document.getElementById('fileInputContainer'), unlimitedCountCheckbox: document.getElementById('unlimitedCount'), countInput: document.getElementById('countInput'), unlimitedCountLabelText: document.getElementById('unlimitedCountLabelText'), protocolAllCheckbox: document.getElementById('protocolAll'), protocolCheckboxes: document.querySelectorAll('input[name="protocolFilter"]'), pathInput: document.getElementById('pathInput'), urlInput: document.getElementById('urlInput'),
     };
 
     // --- Theme & Time Management ---
@@ -304,11 +299,6 @@ document.addEventListener('DOMContentLoaded', () => {
         allElements.linkInputContainer.classList.toggle('hidden', selectedType !== 'link');
         allElements.textInputContainer.classList.toggle('hidden', selectedType !== 'text');
         allElements.fileInputContainer.classList.toggle('hidden', selectedType !== 'file');
-        
-        // Hide link-specific result UI elements unless the input type is link
-        document.getElementById('copyLinkButton').classList.toggle('hidden', selectedType !== 'link');
-        document.getElementById('pathInputSection').querySelector('label').textContent = selectedType === 'link' ? 'نام فایل خروجی / مسیر URL:' : 'نام فایل خروجی:';
-        document.getElementById('pathInputSection').querySelector('p').textContent = selectedType === 'link' ? 'برای لینک‌ها، این مسیر در آدرس ورکر استفاده می‌شود. برای متن/فایل، نام فایل پیشنهادی برای دانلود است.' : 'این نام برای فایلی که دانلود می‌کنید استفاده می‌شود.';
     }));
     allElements.unlimitedCountCheckbox.addEventListener('change', () => {
         allElements.countInput.disabled = allElements.unlimitedCountCheckbox.checked;
@@ -318,8 +308,9 @@ document.addEventListener('DOMContentLoaded', () => {
     allElements.protocolCheckboxes.forEach(checkbox => checkbox.addEventListener('change', () => {
         const isAll = checkbox.id === 'protocolAll';
         const specificCheckboxes = Array.from(allElements.protocolCheckboxes).filter(cb => cb.id !== 'protocolAll');
-        if (isAll) { specificCheckboxes.forEach(cb => { cb.checked = false; cb.disabled = checkbox.checked; });
+        if (isAll && checkbox.checked) { specificCheckboxes.forEach(cb => { cb.checked = false; cb.disabled = true; });
         } else {
+             specificCheckboxes.forEach(cb => { cb.disabled = false; });
             const anySpecificChecked = specificCheckboxes.some(cb => cb.checked);
             allElements.protocolAllCheckbox.disabled = anySpecificChecked;
             if (anySpecificChecked) allElements.protocolAllCheckbox.checked = false;
@@ -337,50 +328,103 @@ document.addEventListener('DOMContentLoaded', () => {
     allElements.processButton.addEventListener('click', async () => {
         const processorWorkerUrl = allElements.processorWorkerInput.value.trim();
         if (!processorWorkerUrl) { allElements.errorText.textContent = 'آدرس ورکر پردازشگر مشخص نشده است.'; allElements.errorMessage.classList.remove('hidden'); return; }
-        allElements.resultArea.classList.add('hidden'); allElements.errorMessage.classList.add('hidden'); allElements.copyMessage.classList.add('hidden'); allElements.loadingMessage.classList.remove('hidden'); allElements.processButton.disabled = true;
-        try {
-            let contentToProcess, mimeType = 'text/plain';
-            const selectedInputType = document.querySelector('input[name="inputType"]:checked').value;
-            if (selectedInputType === 'link') {
-                contentToProcess = document.getElementById('urlInput').value.split('\n').map(link => link.trim()).filter(Boolean);
-                if (contentToProcess.length === 0) throw new Error('لطفاً حداقل یک لینک معتبر وارد کنید.');
-            }
-            else if (selectedInputType === 'text') { contentToProcess = document.getElementById('textInput').value; if (!contentToProcess) throw new Error('لطفاً متنی را وارد کنید.'); }
-            else if (selectedInputType === 'file') { const file = document.getElementById('fileInput').files[0]; if (!file) throw new Error('لطفاً یک فایل را انتخاب کنید.'); mimeType = file.type || 'application/octet-stream'; contentToProcess = await readFileAsArrayBuffer(file); }
-            const selectedProtocols = allElements.protocolAllCheckbox.checked ? ['all'] : [...Array.from(allElements.protocolCheckboxes).filter(cb => cb.checked && cb.id !== 'protocolAll').map(cb => cb.value), ...document.getElementById('customProtocols').value.trim().split(',').map(p => p.trim()).filter(Boolean)];
-            const payload = { inputType: selectedInputType, content: selectedInputType === 'file' ? arrayBufferToBase64(contentToProcess) : contentToProcess, path: document.getElementById('pathInput').value.trim(), mimeType: mimeType, outputFormat: document.querySelector('input[name="outputFormat"]:checked').value, count: allElements.unlimitedCountCheckbox.checked ? 0 : parseInt(allElements.countInput.value, 10), protocols: selectedProtocols, cloudflareOnly: document.getElementById('cloudflareOnly').checked };
-            const response = await fetch(processorWorkerUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            if (!response.ok) { if ((response.status === 429 || response.status >= 500) && donatedWorkersCache.includes(processorWorkerUrl)) { timedOutWorkers.add(processorWorkerUrl); } throw new Error(`خطا از ورکر پردازشگر: ${response.status} - ${await response.text()}`); }
-            const resultJson = await response.json();
-            
-            // Logic to handle response: either a URL or direct content
-            allElements.linkResultContainer.classList.add('hidden');
-            document.getElementById('copyLinkButton').classList.add('hidden');
+        
+        allElements.resultArea.classList.add('hidden'); 
+        allElements.errorMessage.classList.add('hidden'); 
+        allElements.copyMessage.classList.add('hidden'); 
+        allElements.loadingMessage.classList.remove('hidden'); 
+        allElements.processButton.disabled = true;
 
-            if (selectedInputType === 'link' && resultJson.url) {
-                // This block handles the old behavior of getting a dynamic link back
+        try {
+            const selectedInputType = document.querySelector('input[name="inputType"]:checked').value;
+            const selectedProtocols = allElements.protocolAllCheckbox.checked ? ['all'] : [...Array.from(allElements.protocolCheckboxes).filter(cb => cb.checked && cb.id !== 'protocolAll').flatMap(cb => cb.value.split(',')), ...document.getElementById('customProtocols').value.trim().split(',').map(p => p.trim()).filter(Boolean)];
+            
+            if (selectedInputType === 'link') {
+                const links = allElements.urlInput.value.split('\n').map(link => link.trim()).filter(Boolean);
+                if (links.length === 0) throw new Error('لطفاً حداقل یک لینک معتبر وارد کنید.');
+                
+                // Construct the dynamic GET URL
+                const workerBase = processorWorkerUrl.endsWith('/') ? processorWorkerUrl : processorWorkerUrl + '/';
+                const path = allElements.pathInput.value.trim();
+                let finalUrl = workerBase + path;
+                
+                const params = new URLSearchParams();
+                // Use 'urls' for multi-link, 'url' for single link for backward compatibility in worker
+                if (links.length > 1) {
+                    params.append('urls', links.join('|'));
+                } else {
+                    params.append('url', links[0]);
+                }
+                
+                params.append('outputFormat', document.querySelector('input[name="outputFormat"]:checked').value);
+                params.append('count', allElements.unlimitedCountCheckbox.checked ? 0 : parseInt(allElements.countInput.value, 10));
+                params.append('protocols', JSON.stringify(selectedProtocols));
+                params.append('cloudflareOnly', document.getElementById('cloudflareOnly').checked);
+                
+                finalUrl += `?${params.toString()}`;
+
                 allElements.linkResultContainer.classList.remove('hidden');
-                document.getElementById('copyLinkButton').classList.remove('hidden');
-                allElements.resultLink.textContent = resultJson.url;
-                allElements.resultLink.href = resultJson.url;
-                // Fetch the content from the new link to display it
-                const contentResponse = await fetch(resultJson.url);
-                if (!contentResponse.ok) throw new Error('خطا در دریافت محتوا از لینک جدید.');
+                allElements.resultLink.textContent = finalUrl;
+                allElements.resultLink.href = finalUrl;
+                
+                // Fetch the content from the newly created link for preview
+                const contentResponse = await fetch(finalUrl);
+                if (!contentResponse.ok) throw new Error(`خطا در دریافت محتوا از لینک جدید: ${contentResponse.status} - ${await contentResponse.text()}`);
                 downloadContentForButton = await contentResponse.text();
-            }
-            else if (resultJson.content !== undefined) {
-                // This block handles direct content response (for text, file, and now multi-link)
+                downloadMimeTypeForButton = contentResponse.headers.get('Content-Type') || 'text/plain';
+
+            } else { // Handle Text and File inputs via POST
+                let contentToProcess, mimeType = 'text/plain';
+                if (selectedInputType === 'text') {
+                    contentToProcess = document.getElementById('textInput').value;
+                    if (!contentToProcess) throw new Error('لطفاً متنی را وارد کنید.');
+                } else if (selectedInputType === 'file') {
+                    const file = document.getElementById('fileInput').files[0];
+                    if (!file) throw new Error('لطفاً یک فایل را انتخاب کنید.');
+                    mimeType = file.type || 'application/octet-stream';
+                    contentToProcess = await readFileAsArrayBuffer(file);
+                }
+
+                const payload = {
+                    inputType: selectedInputType,
+                    content: selectedInputType === 'file' ? arrayBufferToBase64(contentToProcess) : contentToProcess,
+                    path: allElements.pathInput.value.trim(),
+                    mimeType: mimeType,
+                    outputFormat: document.querySelector('input[name="outputFormat"]:checked').value,
+                    count: allElements.unlimitedCountCheckbox.checked ? 0 : parseInt(allElements.countInput.value, 10),
+                    protocols: selectedProtocols,
+                    cloudflareOnly: document.getElementById('cloudflareOnly').checked
+                };
+                
+                const response = await fetch(processorWorkerUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) {
+                    if ((response.status === 429 || response.status >= 500) && donatedWorkersCache.includes(processorWorkerUrl)) {
+                        timedOutWorkers.add(processorWorkerUrl);
+                    }
+                    throw new Error(`خطا از ورکر پردازشگر: ${response.status} - ${await response.text()}`);
+                }
+                const resultJson = await response.json();
+                if (resultJson.content === undefined) throw new Error('پاسخ نامعتبر از ورکر.');
+
                 downloadContentForButton = resultJson.content;
+                downloadMimeTypeForButton = resultJson.mimeType || 'application/octet-stream';
+                allElements.linkResultContainer.classList.add('hidden'); // Hide link result for non-link inputs
             }
-            else { throw new Error('پاسخ نامعتبر از ورکر.'); }
 
             allElements.convertedContentDisplay.textContent = downloadContentForButton;
-            downloadMimeTypeForButton = resultJson.mimeType || 'application/octet-stream';
-            downloadFilenameForButton = document.getElementById('pathInput').value.trim() || 'output.txt';
-            if (downloadMimeTypeForButton.includes('text') && !downloadFilenameForButton.endsWith('.txt')) { downloadFilenameForButton += '.txt'; }
+            downloadFilenameForButton = allElements.pathInput.value.trim() || 'output.txt';
+            if (downloadMimeTypeForButton.includes('text') && !downloadFilenameForButton.endsWith('.txt')) {
+                downloadFilenameForButton += '.txt';
+            }
             allElements.resultArea.classList.remove('hidden');
-        } catch (e) { allElements.errorText.textContent = 'خطا در عملیات پردازش: ' + e.message; allElements.errorMessage.classList.remove('hidden'); }
-        finally { allElements.loadingMessage.classList.add('hidden'); allElements.processButton.disabled = false; }
+
+        } catch (e) {
+            allElements.errorText.textContent = 'خطا در عملیات پردازش: ' + e.message;
+            allElements.errorMessage.classList.remove('hidden');
+        } finally {
+            allElements.loadingMessage.classList.add('hidden');
+            allElements.processButton.disabled = false;
+        }
     });
 
     document.getElementById('copyLinkButton').addEventListener('click', () => { navigator.clipboard.writeText(allElements.resultLink.href).then(() => { allElements.copyMessage.textContent = 'لینک کپی شد!'; allElements.copyMessage.classList.remove('hidden'); setTimeout(() => allElements.copyMessage.classList.add('hidden'), 2000); }); });
