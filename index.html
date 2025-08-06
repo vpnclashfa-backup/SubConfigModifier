@@ -144,7 +144,7 @@
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-2">فیلتر پروتکل:</label>
                 <div id="protocol-filter-container" class="checkbox-group grid grid-cols-2 gap-2">
-                    <!-- Protocol checkboxes will be ordered by JS, structure remains -->
+                    <!-- Protocol checkboxes will be rendered here by JS -->
                 </div>
                 <div class="mt-3">
                     <label for="customProtocols" class="block text-sm font-medium mb-2 text-right">پروتکل‌های سفارشی (کاما-جدا شده):</label>
@@ -163,10 +163,12 @@
             </div>
             <div id="contentResultContainer" class="mb-4">
                 <p class="text-gray-700 text-right mb-2">پیش‌نمایش محتوای خروجی:</p>
-                <pre id="convertedContentDisplay" class="result-area"></pre>
-                <button id="previewCopyButton" title="کپی محتوای پیش‌نمایش">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" /><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" /></svg>
-                </button>
+                <div class="relative">
+                    <pre id="convertedContentDisplay" class="result-area"></pre>
+                    <button id="previewCopyButton" title="کپی محتوای پیش‌نمایش">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" /><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" /></svg>
+                    </button>
+                </div>
             </div>
             <div id="statsContainer" class="text-right text-sm mt-4 hidden"></div>
             <div class="flex flex-col md:flex-row justify-center gap-4 mt-4">
@@ -190,14 +192,49 @@ const THEME_KEY = 'app_theme';
 const DONATED_WORKERS_URL = 'https://raw.githubusercontent.com/vpnclashfa-backup/SubConfigModifier/main/workers.txt';
 let downloadContentForButton = '', downloadMimeTypeForButton = '', downloadFilenameForButton = '';
 
-// --- UI & Helper Functions ---
+// ===== HELPER & CORE LOGIC FUNCTIONS =====
+async function setupProcessorWorkerUrl() {
+    const processorWorkerInput = document.getElementById('processorWorkerInput');
+    const suggestedWorkerMessage = document.getElementById('suggestedWorkerMessage');
+    const personalWorker = localStorage.getItem(PERSONAL_WORKER_URL_KEY);
+    if (personalWorker) {
+        processorWorkerInput.value = personalWorker;
+        suggestedWorkerMessage.classList.add('hidden');
+        return;
+    }
+    try {
+        const response = await fetch(DONATED_WORKERS_URL, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Failed to fetch workers list: ${response.status}`);
+        const workerText = await response.text();
+        const urls = workerText.split('\n').map(line => line.trim()).filter(line => line.startsWith('https://'));
+        if (urls.length === 0) {
+            processorWorkerInput.placeholder = "لیست ورکر عمومی خالی است.";
+            return;
+        }
+        const availableWorkers = urls.filter(url => !timedOutWorkers.has(url));
+        if (availableWorkers.length > 0) {
+            const randomIndex = Math.floor(Math.random() * availableWorkers.length);
+            processorWorkerInput.value = availableWorkers[randomIndex];
+            suggestedWorkerMessage.classList.remove('hidden');
+        } else {
+             processorWorkerInput.placeholder = "تمام ورکرهای عمومی موقتا در دسترس نیستند.";
+        }
+    } catch (error) {
+        console.error('Could not fetch or suggest a donated worker:', error);
+        processorWorkerInput.placeholder = "خطا در دریافت لیست ورکرهای عمومی";
+    }
+}
+function readFileAsArrayBuffer(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = error => reject(error); reader.readAsArrayBuffer(file); }); }
+function arrayBufferToBase64(buffer) { let binary = ''; const bytes = new Uint8Array(buffer); for (let i = 0; i < bytes.byteLength; i++) { binary += String.fromCharCode(bytes[i]); } return window.btoa(binary); }
+function downloadFile(filename, content, mimeType) { try { const blob = new Blob([content], { type: mimeType }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); } catch (error) { document.getElementById('errorText').textContent = 'خطا در دانلود فایل: ' + error.message; document.getElementById('errorMessage').classList.remove('hidden'); } }
+
 function displayStatistics(stats_before, stats_after) {
     const statsContainer = document.getElementById('statsContainer');
     statsContainer.innerHTML = '';
     if (!stats_before) { statsContainer.classList.add('hidden'); return; }
 
     const createStatsCard = (title, stats, isAfter = false) => {
-        if (!stats || stats.total === 0 && !isAfter) return '';
+        if (!stats || (!isAfter && stats.total === 0)) return '';
         let cardHtml = `<div class="stats-card"><h4>${title}</h4><ul>`;
         cardHtml += `<li><strong>تعداد کل کانفیگ‌ها:</strong> ${stats.total}</li>`;
         if (isAfter && stats.finalCount !== undefined) {
@@ -243,26 +280,9 @@ function showCopyMessage(message) {
 document.addEventListener('DOMContentLoaded', () => {
     // Protocol definitions and ordering
     const protocols = [
-        { id: 'protocolAll', value: 'all', label: 'همه پروتکل‌ها' },
-        { id: 'protocolVLESS', value: 'vless', label: 'VLESS' },
-        { id: 'protocolVMess', value: 'vmess', label: 'VMess' },
-        { id: 'protocolSS', value: 'ss', label: 'Shadowsocks (SS)' },
-        { id: 'protocolTrojan', value: 'trojan', label: 'Trojan' },
-        { id: 'protocolWireGuard', value: 'wireguard', label: 'WireGuard' },
-        { id: 'protocolHysteria2', value: 'hysteria2', label: 'Hysteria2' },
-        { id: 'protocolHysteria', value: 'hysteria', label: 'Hysteria' },
-        { id: 'protocolTUIC', value: 'tuic', label: 'TUIC' },
-        { id: 'protocolSSR', value: 'ssr', label: 'ShadowsocksR (SSR)' },
-        { id: 'protocolAnyTLS', value: 'anytls', label: 'AnyTLS' },
-        { id: 'protocolMieru', value: 'mieru', label: 'Mieru' },
-        { id: 'protocolJuicity', value: 'juicity', label: 'Juicity' },
-        { id: 'protocolSnell', value: 'snell', label: 'Snell' },
-        { id: 'protocolSSH', value: 'ssh', label: 'SSH' },
-        { id: 'protocolWARP', value: 'warp', label: 'WARP' },
-        { id: 'protocolSOCKS5', value: 'socks,socks5', label: 'SOCKS5' },
+        { id: 'protocolAll', value: 'all', label: 'همه پروتکل‌ها' }, { id: 'protocolVLESS', value: 'vless', label: 'VLESS' }, { id: 'protocolVMess', value: 'vmess', label: 'VMess' }, { id: 'protocolSS', value: 'ss', label: 'Shadowsocks (SS)' }, { id: 'protocolTrojan', value: 'trojan', label: 'Trojan' }, { id: 'protocolWireGuard', value: 'wireguard', label: 'WireGuard' }, { id: 'protocolHysteria2', value: 'hysteria2', label: 'Hysteria2' }, { id: 'protocolHysteria', value: 'hysteria', label: 'Hysteria' }, { id: 'protocolTUIC', value: 'tuic', label: 'TUIC' }, { id: 'protocolSSR', value: 'ssr', label: 'ShadowsocksR (SSR)' }, { id: 'protocolAnyTLS', value: 'anytls', label: 'AnyTLS' }, { id: 'protocolMieru', value: 'mieru', label: 'Mieru' }, { id: 'protocolJuicity', value: 'juicity', label: 'Juicity' }, { id: 'protocolSnell', value: 'snell', label: 'Snell' }, { id: 'protocolSSH', value: 'ssh', label: 'SSH' }, { id: 'protocolWARP', value: 'warp', label: 'WARP' }, { id: 'protocolSOCKS5', value: 'socks,socks5', label: 'SOCKS5' },
     ];
-    const protocolContainer = document.getElementById('protocol-filter-container');
-    protocolContainer.innerHTML = protocols.map(p => `<div><input type="checkbox" id="${p.id}" name="protocolFilter" value="${p.value}" class="hidden" ${p.id === 'protocolAll' ? 'checked' : ''}><label for="${p.id}" class="justify-center"><span class="text-sm">${p.label}</span></label></div>`).join('');
+    document.getElementById('protocol-filter-container').innerHTML = protocols.map(p => `<div><input type="checkbox" id="${p.id}" name="protocolFilter" value="${p.value}" class="hidden" ${p.id === 'protocolAll' ? 'checked' : ''}><label for="${p.id}" class="justify-center"><span class="text-sm">${p.label}</span></label></div>`).join('');
 
     const allElements = {
         processorWorkerInput: document.getElementById('processorWorkerInput'), saveWorkerUrlButton: document.getElementById('saveWorkerUrlButton'), processButton: document.getElementById('processButton'), loadingMessage: document.getElementById('loadingMessage'), errorMessage: document.getElementById('errorMessage'), errorText: document.getElementById('errorText'), resultArea: document.getElementById('resultArea'), linkResultContainer: document.getElementById('linkResultContainer'), resultLink: document.getElementById('resultLink'), convertedContentDisplay: document.getElementById('convertedContentDisplay'), statsContainer: document.getElementById('statsContainer'), copyMessage: document.getElementById('copyMessage'), themeToggle: document.getElementById('themeToggle'), themeIcon: document.getElementById('themeIcon'), tehranTimeDisplay: document.getElementById('tehranTime'), unlimitedCountCheckbox: document.getElementById('unlimitedCount'), countInput: document.getElementById('countInput'), pathInput: document.getElementById('pathInput'), urlInput: document.getElementById('urlInput'),
@@ -285,7 +305,13 @@ document.addEventListener('DOMContentLoaded', () => {
     protocolAllCheckbox.addEventListener('change', () => { if (protocolAllCheckbox.checked) { specificProtocolCheckboxes.forEach(cb => cb.checked = false); } });
     specificProtocolCheckboxes.forEach(cb => { cb.addEventListener('change', () => { if (cb.checked) { protocolAllCheckbox.checked = false; } if (!Array.from(specificProtocolCheckboxes).some(c => c.checked)) { protocolAllCheckbox.checked = true; } }); });
 
-    allElements.saveWorkerUrlButton.addEventListener('click', () => { /* Unchanged */ });
+    allElements.saveWorkerUrlButton.addEventListener('click', () => {
+        const url = allElements.processorWorkerInput.value.trim();
+        const msgEl = document.getElementById('workerUrlMessage');
+        if (url) { localStorage.setItem(PERSONAL_WORKER_URL_KEY, url); msgEl.textContent = 'آدرس ورکر شخصی شما ذخیره شد!'; }
+        else { localStorage.removeItem(PERSONAL_WORKER_URL_KEY); msgEl.textContent = 'آدرس ورکر شخصی حذف شد. برای استفاده از ورکر عمومی صفحه را رفرش کنید.'; }
+        msgEl.classList.remove('hidden'); setTimeout(() => msgEl.classList.add('hidden'), 3000); if(!url) setTimeout(() => window.location.reload(), 1000);
+    });
 
     allElements.processButton.addEventListener('click', async () => {
         const processorWorkerUrl = allElements.processorWorkerInput.value.trim();
@@ -300,12 +326,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectedProtocols = protocolAllCheckbox.checked ? ['all'] : [...document.querySelectorAll('input[name="protocolFilter"]:not(#protocolAll):checked')].flatMap(cb => cb.value.split(','));
             const customProtocols = document.getElementById('customProtocols').value.trim().split(',').map(p => p.trim()).filter(Boolean);
             const allSelectedProtocols = [...new Set([...selectedProtocols, ...customProtocols])];
+            const baseWorkerUrl = processorWorkerUrl.endsWith('/') ? processorWorkerUrl : processorWorkerUrl + '/';
             
             let response;
-            let finalUrlForDisplay = '';
-
-            const baseWorkerUrl = processorWorkerUrl.endsWith('/') ? processorWorkerUrl : processorWorkerUrl + '/';
-
             if (selectedInputType === 'link') {
                 const links = allElements.urlInput.value.split('\n').map(link => link.trim()).filter(Boolean);
                 if (links.length === 0) throw new Error('لطفاً حداقل یک لینک معتبر وارد کنید.');
@@ -317,15 +340,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     protocols: JSON.stringify(allSelectedProtocols),
                     cloudflareOnly: document.getElementById('cloudflareOnly').checked,
                 });
-                if (links.length > 1) { params.append('urls', links.join('|')); } else { params.append('url', links[0]); }
+                if (links.length > 1) { params.set('urls', links.join('|')); } else { params.set('url', links[0]); }
                 
                 const clientUrl = `${baseWorkerUrl}${path}?${params.toString()}`;
                 const apiUrl = `${baseWorkerUrl}api/${path}?${params.toString()}`;
-                finalUrlForDisplay = clientUrl;
-
+                
+                allElements.resultLink.textContent = clientUrl;
+                allElements.resultLink.href = clientUrl;
                 allElements.linkResultContainer.classList.remove('hidden');
-                allElements.resultLink.textContent = finalUrlForDisplay;
-                allElements.resultLink.href = finalUrlForDisplay;
                 
                 response = await fetch(apiUrl);
             } else {
@@ -334,8 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 else if (selectedInputType === 'file') { const file = document.getElementById('fileInput').files[0]; if (!file) throw new Error('لطفاً یک فایل را انتخاب کنید.'); mimeType = file.type; contentToProcess = await arrayBufferToBase64(await readFileAsArrayBuffer(file)); }
                 
                 response = await fetch(baseWorkerUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         inputType: selectedInputType, content: contentToProcess, mimeType,
                         outputFormat: document.querySelector('input[name="outputFormat"]:checked').value,
@@ -356,7 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             displayStatistics(resultJson.stats_before, resultJson.stats_after);
             
-            downloadFilenameForButton = allElements.pathInput.value.trim() || 'output.txt';
+            downloadFilenameForButton = allElements.pathInput.value.trim() || 'SubConfig.txt';
             allElements.resultArea.classList.remove('hidden');
             if (selectedInputType !== 'link') { allElements.linkResultContainer.classList.add('hidden'); }
 
@@ -373,8 +394,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('previewCopyButton').addEventListener('click', () => { navigator.clipboard.writeText(allElements.convertedContentDisplay.textContent).then(() => showCopyMessage('محتوای پیش‌نمایش کپی شد!')); });
     document.getElementById('downloadButton').addEventListener('click', () => { if (downloadContentForButton) { downloadFile(downloadFilenameForButton, downloadContentForButton, downloadMimeTypeForButton); } });
 });
-
-setupProcessorWorkerUrl();
 </script>
 </body>
 </html>
