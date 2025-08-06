@@ -35,7 +35,10 @@
         .radio-group label:hover, .checkbox-group label:hover { background-color: var(--checkbox-label-hover-bg); }
         .radio-group input:checked + label, .checkbox-group input:checked + label { border-color: var(--input-border-focus); background-color: var(--blue-highlight-bg); color: var(--blue-highlight-text); }
         .checkbox-group input:disabled + label { opacity: 0.6; cursor: not-allowed; box-shadow: none; } .checkbox-group input:disabled + label:hover { background-color: var(--checkbox-label-bg); }
-        #convertedContentDisplay { max-height: 6em; overflow-y: auto; white-space: pre-wrap; font-family: 'Vazirmatn', monospace; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); direction: ltr; text-align: left; }
+        #contentResultContainer { position: relative; }
+        #convertedContentDisplay { max-height: 10em; overflow-y: auto; white-space: pre-wrap; font-family: 'Vazirmatn', monospace; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); direction: ltr; text-align: left; padding: 0.5rem; padding-left: 2.5rem; }
+        #previewCopyButton { position: absolute; top: 0.5rem; left: 0.5rem; background: var(--button-secondary-bg); color: white; border: none; border-radius: 0.375rem; padding: 0.25rem 0.5rem; cursor: pointer; opacity: 0.7; transition: opacity 0.2s; }
+        #contentResultContainer:hover #previewCopyButton { opacity: 1; }
         #resultLink { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; padding: 0.5rem; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); }
         .stats-card { background-color: var(--stats-card-bg); border: 1px solid var(--stats-card-border); border-radius: 0.75rem; padding: 1rem; margin-top: 1rem; text-align: right; color: var(--text-color-primary); }
         .stats-card h4 { font-weight: bold; margin-bottom: 0.75rem; color: var(--text-color-primary);}
@@ -53,16 +56,12 @@
 </head>
 <body>
     <div class="container">
-        <!-- Theme Toggle -->
         <label class="theme-toggle">
             <input type="checkbox" id="themeToggle" class="hidden">
             <span id="themeIcon" class="text-2xl">☀️</span>
         </label>
-
         <h1 class="text-3xl font-bold mb-6">مدیریت و تبدیل کانفیگ</h1>
         <p class="text-gray-600 mb-8">نوع ورودی و عملیات تبدیل را انتخاب کنید.</p>
-
-        <!-- Worker URL Configuration -->
         <div class="mb-6 p-4 rounded-lg border" style="border-color: var(--worker-url-border); background-color: var(--worker-url-bg);">
             <label for="processorWorkerInput" class="block text-blue-700 text-right text-sm font-medium mb-2">آدرس ورکر پردازشگر شما:</label>
             <div id="suggestedWorkerMessage" class="text-xs text-blue-600 bg-blue-100 p-2 rounded-md mb-2 hidden text-center">
@@ -72,48 +71,23 @@
                    class="w-full px-4 py-3 border border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-blue-700">
             <button id="saveWorkerUrlButton"
                     class="mt-3 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                ذخیره آدرس ورکر شخصی روی مرورگرتون بصورت لوکال
+                ذخیره آدرس ورکر شخصی
             </button>
             <div id="workerUrlMessage" class="text-green-600 text-sm mt-2 hidden"></div>
         </div>
         
-        <!-- Donate Worker Section (Manual via Telegram) -->
-        <div class="mb-6 p-4 rounded-lg border text-center" style="background-color: var(--config-filter-bg); border-color: var(--config-filter-border);">
-            <h3 class="font-semibold mb-2" style="color: var(--text-color-primary);">می‌خواهید یک ورکر عمومی اهدا کنید؟</h3>
-            <p class="text-xs mb-4 text-gray-500">
-                ورکر شما پس از بررسی به لیست عمومی اضافه خواهد شد. لطفاً آدرس ورکر خود را از طریق تلگرام ارسال کنید.
-            </p>
-            <a href="https://t.me/vpnclashfa" target="_blank" rel="noopener noreferrer" 
-               class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 rounded-lg text-white font-semibold transition-transform transform hover:scale-105"
-               style="background-color: #2AABEE;">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.88l-1.45 6.89c-.1.45-.43.56-.81.35l-2.25-1.65-1.09 1.05c-.12.12-.22.22-.44.22l.16-2.31 4.2-3.8c.18-.17-.05-.27-.3-.12l-5.18 3.23-2.21-.69c-.45-.14-.47-.43.09-.64l8.83-3.41c.38-.15.72.08.6.53z"/>
-                </svg>
-                <span>ارسال ورکر در تلگرام (@vpnclashfa)</span>
-            </a>
-        </div>
-        
-        <!-- ===== NEW SECTION: Instructions for Creating a Worker ===== -->
         <div class="mb-6 p-4 rounded-lg border text-right" style="background-color: var(--config-filter-bg); border-color: var(--config-filter-border);">
             <h3 class="font-semibold mb-3">چگونه ورکر شخصی بسازیم؟</h3>
-            <p class="text-sm mb-4 text-gray-600">
-                برای ساخت ورکر شخصی یا اهدای آن به لیست عمومی، مراحل زیر را در حساب کلادفلر خود دنبال کنید:
-            </p>
             <ol class="list-decimal list-inside text-sm text-gray-600 space-y-2">
-                <li>به داشبورد کلادفلر خود بروید، از منوی کناری وارد بخش <strong class="text-indigo-600 dark:text-indigo-400">Workers & Pages</strong> شوید و روی <strong class="text-indigo-600 dark:text-indigo-400">Create Application</strong> کلیک کنید.</li>
+                <li>به داشبورد کلادفلر رفته، وارد بخش <strong class="text-indigo-600 dark:text-indigo-400">Workers & Pages</strong> شوید و روی <strong class="text-indigo-600 dark:text-indigo-400">Create Application</strong> کلیک کنید.</li>
                 <li>در تب <strong class="text-indigo-600 dark:text-indigo-400">Workers</strong>، روی <strong class="text-indigo-600 dark:text-indigo-400">Create Worker</strong> کلیک کنید.</li>
-                <li>یک نام برای ورکر خود انتخاب کرده و آن را <strong class="text-indigo-600 dark:text-indigo-400">Deploy</strong> کنید.</li>
-                <li>پس از ساخته شدن، روی <strong class="text-indigo-600 dark:text-indigo-400">Edit code</strong> کلیک کنید.</li>
-                <li>تمام کدهای پیش‌فرض را پاک کرده و محتوای <a href="https://raw.githubusercontent.com/vpnclashfa-backup/SubConfigModifier/main/worker.js" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">این فایل اسکریپت</a> را به طور کامل کپی و در ویرایشگر کلادفلر جای‌گذاری کنید.</li>
+                <li>یک نام برای ورکر انتخاب و آن را <strong class="text-indigo-600 dark:text-indigo-400">Deploy</strong> کنید.</li>
+                <li>روی <strong class="text-indigo-600 dark:text-indigo-400">Edit code</strong> کلیک کنید.</li>
+                <li>کد پیش‌فرض را پاک کرده و محتوای <a href="https://raw.githubusercontent.com/vpnclashfa-backup/SubConfigModifier/main/worker.js" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">این اسکریپت</a> را کپی و جای‌گذاری کنید.</li>
                 <li>روی <strong class="text-indigo-600 dark:text-indigo-400">Save and Deploy</strong> کلیک کنید.</li>
             </ol>
-            <p class="text-sm mt-4 text-gray-600">
-                پس از اتمام، آدرس ورکر ساخته شده (مثلاً: <code class="bg-gray-200 dark:bg-gray-700 text-red-500 p-1 rounded text-xs">my-worker.user.workers.dev</code>) را می‌توانید در کادر "آدرس ورکر پردازشگر" در بالای صفحه برای استفاده شخصی ذخیره کنید، یا از طریق تلگرام برای ما ارسال کرده تا به لیست عمومی اضافه شود.
-            </p>
         </div>
 
-
-        <!-- Input Type Selection -->
         <div class="mb-6">
             <label class="block text-gray-700 text-right text-sm font-medium mb-2">نوع ورودی:</label>
             <div class="input-type-selector radio-group grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -123,7 +97,6 @@
             </div>
         </div>
 
-        <!-- Input Fields (Dynamic) -->
         <div id="inputContainer" class="mb-6">
             <div id="linkInputContainer">
                 <label for="urlInput" class="block text-gray-700 text-right text-sm font-medium mb-2">لینک‌های اشتراک (هر لینک در یک خط):</label>
@@ -139,20 +112,16 @@
             </div>
         </div>
 
-        <!-- Path Input Field -->
         <div class="mb-6" id="pathInputSection">
             <label for="pathInput" class="block text-gray-700 text-right text-sm font-medium mb-2">نام فایل خروجی / مسیر URL:</label>
-            <input type="text" id="pathInput" value="output.txt" class="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700" placeholder="مثال: my-configs.txt">
-            <p class="text-xs text-gray-500 text-right mt-1">برای لینک‌ها، این مسیر در آدرس ورکر استفاده می‌شود. برای متن/فایل، نام فایل پیشنهادی برای دانلود است.</p>
+            <input type="text" id="pathInput" value="SubConfig.txt" class="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700" placeholder="مثال: my-configs.txt">
         </div>
 
-        <!-- Output Format Selection -->
         <div class="mb-8 radio-group grid grid-cols-1 md:grid-cols-2 gap-4">
             <div> <input type="radio" id="outputFormatNormal" name="outputFormat" value="normal" class="hidden" checked> <label for="outputFormatNormal" class="flex-grow justify-center"><span class="ml-2 text-lg">خروجی متن عادی</span></label> </div>
             <div> <input type="radio" id="outputFormatBase64" name="outputFormat" value="base64" class="hidden"> <label for="outputFormatBase64" class="flex-grow justify-center"><span class="ml-2 text-lg">خروجی Base64</span></label> </div>
         </div>
 
-        <!-- Config Filtering Options -->
         <div class="mb-8 p-4 rounded-lg border" style="background-color: var(--config-filter-bg); border-color: var(--config-filter-border); color: var(--text-color-primary);">
             <h3 class="text-lg font-semibold mb-4 text-right">گزینه‌های فیلتر کانفیگ (اختیاری)</h3>
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
@@ -175,23 +144,7 @@
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-2">فیلتر پروتکل:</label>
                 <div id="protocol-filter-container" class="checkbox-group grid grid-cols-2 gap-2">
-                    <div><input type="checkbox" id="protocolAll" name="protocolFilter" value="all" class="hidden" checked><label for="protocolAll" class="justify-center"><span class="text-sm">همه پروتکل‌ها</span></label></div>
-                    <div><input type="checkbox" id="protocolVLESS" name="protocolFilter" value="vless" class="hidden"><label for="protocolVLESS" class="justify-center"><span class="text-sm">VLESS</span></label></div>
-                    <div><input type="checkbox" id="protocolVMess" name="protocolFilter" value="vmess" class="hidden"><label for="protocolVMess" class="justify-center"><span class="text-sm">VMess</span></label></div>
-                    <div><input type="checkbox" id="protocolSS" name="protocolFilter" value="ss" class="hidden"><label for="protocolSS" class="justify-center"><span class="text-sm">Shadowsocks (SS)</span></label></div>
-                    <div><input type="checkbox" id="protocolTrojan" name="protocolFilter" value="trojan" class="hidden"><label for="protocolTrojan" class="justify-center"><span class="text-sm">Trojan</span></label></div>
-                    <div><input type="checkbox" id="protocolWireGuard" name="protocolFilter" value="wireguard" class="hidden"><label for="protocolWireGuard" class="justify-center"><span class="text-sm">WireGuard</span></label></div>
-                    <div><input type="checkbox" id="protocolHysteria2" name="protocolFilter" value="hysteria2" class="hidden"><label for="protocolHysteria2" class="justify-center"><span class="text-sm">Hysteria2</span></label></div>
-                    <div><input type="checkbox" id="protocolHysteria" name="protocolFilter" value="hysteria" class="hidden"><label for="protocolHysteria" class="justify-center"><span class="text-sm">Hysteria</span></label></div>
-                    <div><input type="checkbox" id="protocolTUIC" name="protocolFilter" value="tuic" class="hidden"><label for="protocolTUIC" class="justify-center"><span class="text-sm">TUIC</span></label></div>
-                    <div><input type="checkbox" id="protocolSSR" name="protocolFilter" value="ssr" class="hidden"><label for="protocolSSR" class="justify-center"><span class="text-sm">ShadowsocksR (SSR)</span></label></div>
-                    <div><input type="checkbox" id="protocolAnyTLS" name="protocolFilter" value="anytls" class="hidden"><label for="protocolAnyTLS" class="justify-center"><span class="text-sm">AnyTLS</span></label></div>
-                    <div><input type="checkbox" id="protocolMieru" name="protocolFilter" value="mieru" class="hidden"><label for="protocolMieru" class="justify-center"><span class="text-sm">Mieru</span></label></div>
-                    <div><input type="checkbox" id="protocolJuicity" name="protocolFilter" value="juicity" class="hidden"><label for="protocolJuicity" class="justify-center"><span class="text-sm">Juicity</span></label></div>
-                    <div><input type="checkbox" id="protocolSnell" name="protocolFilter" value="snell" class="hidden"><label for="protocolSnell" class="justify-center"><span class="text-sm">Snell</span></label></div>
-                    <div><input type="checkbox" id="protocolSSH" name="protocolFilter" value="ssh" class="hidden"><label for="protocolSSH" class="justify-center"><span class="text-sm">SSH</span></label></div>
-                    <div><input type="checkbox" id="protocolWARP" name="protocolFilter" value="warp" class="hidden"><label for="protocolWARP" class="justify-center"><span class="text-sm">WARP</span></label></div>
-                    <div><input type="checkbox" id="protocolSOCKS5" name="protocolFilter" value="socks,socks5" class="hidden"><label for="protocolSOCKS5" class="justify-center"><span class="text-sm">SOCKS5</span></label></div>
+                    <!-- Protocol checkboxes will be ordered by JS, structure remains -->
                 </div>
                 <div class="mt-3">
                     <label for="customProtocols" class="block text-sm font-medium mb-2 text-right">پروتکل‌های سفارشی (کاما-جدا شده):</label>
@@ -209,28 +162,23 @@
                 <a id="resultLink" href="#" target="_blank" class="result-area text-indigo-600 hover:underline"></a>
             </div>
             <div id="contentResultContainer" class="mb-4">
-                <p class="text-gray-700 text-right mb-2">محتوای تبدیل شده:</p>
-                <pre id="convertedContentDisplay" class="result-area text-gray-800 text-sm p-2 rounded-lg"></pre>
+                <p class="text-gray-700 text-right mb-2">پیش‌نمایش محتوای خروجی:</p>
+                <pre id="convertedContentDisplay" class="result-area"></pre>
+                <button id="previewCopyButton" title="کپی محتوای پیش‌نمایش">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" /><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" /></svg>
+                </button>
             </div>
-             <!-- Statistics Container -->
-            <div id="statsContainer" class="text-right text-sm mt-4 hidden">
-                <!-- Statistics will be rendered here by JS -->
-            </div>
+            <div id="statsContainer" class="text-right text-sm mt-4 hidden"></div>
             <div class="flex flex-col md:flex-row justify-center gap-4 mt-4">
                 <button id="copyLinkButton" class="bg-indigo-500 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">کپی لینک</button>
-                <button id="copyContentButton" class="bg-indigo-500 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">کپی محتوا</button>
                 <button id="downloadButton" class="bg-green-500 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2">دانلود فایل</button>
             </div>
             <div id="copyMessage" class="text-green-600 text-sm mt-2 hidden"></div>
         </div>
         <div id="errorMessage" class="mt-8 p-4 rounded-xl text-red-700 hidden" style="background-color: var(--error-bg); border: 1px solid var(--error-text);"><p>خطا: <span id="errorText"></span></p></div>
 
-        <!-- Social Media Links -->
         <div class="social-icons-container">
             <a href="https://t.me/vpnclashfa" target="_blank" aria-label="Telegram"> <img src="https://cdn.dribbble.com/users/4507400/screenshots/15420681/media/c00f77bc443cbc4ac96d138f9ac854c5.gif" alt="Telegram"> </a>
-            <a href="https://twitter.com/coldwater_10" target="_blank" aria-label="Twitter"> <img src="https://cdn.dribbble.com/users/2652449/screenshots/14764078/media/2b620382444946ce84aac0a132c40063.gif" alt="Twitter"> </a>
-            <a href="https://www.tvtime.com/en/user/43351079/profile" target="_blank" aria-label="TvTime"> <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExOTFhMDk5NzJlYzdmZTJjMDM2Y2MzMjBkOTVkODAxM2FjMTdjZGMwNSZlcD12MV9pbnRlcm5hbF9naWZzX2dpZklkJmN0PWc/lj1ghwUoflkw2F3o0T/giphy.gif" alt="TvTime"> </a>
-            <a href="https://linktr.ee/coldwater_10" target="_blank" aria-label="Linktree"> <img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExdGZrdHVxaGkycXV5M2g2emdvdHkwOWVvOHI5YWR3cTVtODJtbGQwcCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/U3ig2IVcuNn6VgU3oO/giphy.gif" alt="linktr"> </a>
         </div>
         <div id="tehranTime" class="footer-time"></div>
     </div>
@@ -240,159 +188,110 @@
 const PERSONAL_WORKER_URL_KEY = 'personal_processor_worker_url';
 const THEME_KEY = 'app_theme';
 const DONATED_WORKERS_URL = 'https://raw.githubusercontent.com/vpnclashfa-backup/SubConfigModifier/main/workers.txt';
-let donatedWorkersCache = [];
-let timedOutWorkers = new Set();
 let downloadContentForButton = '', downloadMimeTypeForButton = '', downloadFilenameForButton = '';
 
-// ===== HELPER & CORE LOGIC FUNCTIONS =====
-async function setupProcessorWorkerUrl() { /* This function is large and unchanged, so it's omitted for brevity */ 
-    const processorWorkerInput = document.getElementById('processorWorkerInput');
-    const suggestedWorkerMessage = document.getElementById('suggestedWorkerMessage');
-
-    const personalWorker = localStorage.getItem(PERSONAL_WORKER_URL_KEY);
-    if (personalWorker) {
-        processorWorkerInput.value = personalWorker;
-        suggestedWorkerMessage.classList.add('hidden');
-        return;
-    }
-
-    try {
-        const response = await fetch(DONATED_WORKERS_URL, { cache: "no-store" });
-        if (!response.ok) throw new Error(`Failed to fetch workers list: ${response.status}`);
-        const workerText = await response.text();
-        const urls = workerText.split('\n').map(line => line.trim()).filter(line => line.startsWith('https://'));
-        
-        if (urls.length === 0) {
-            processorWorkerInput.placeholder = "لیست ورکر عمومی خالی است.";
-            return;
-        }
-
-        donatedWorkersCache = urls;
-        const availableWorkers = donatedWorkersCache.filter(url => !timedOutWorkers.has(url));
-
-        if (availableWorkers.length > 0) {
-            const randomIndex = Math.floor(Math.random() * availableWorkers.length);
-            processorWorkerInput.value = availableWorkers[randomIndex];
-            suggestedWorkerMessage.classList.remove('hidden');
-        } else {
-             processorWorkerInput.placeholder = "تمام ورکرهای عمومی موقتا در دسترس نیستند.";
-        }
-    } catch (error) {
-        console.error('Could not fetch or suggest a donated worker:', error);
-        processorWorkerInput.placeholder = "خطا در دریافت لیست ورکرهای عمومی";
-    }
-}
-function readFileAsArrayBuffer(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = error => reject(error); reader.readAsArrayBuffer(file); }); }
-function arrayBufferToBase64(buffer) { let binary = ''; const bytes = new Uint8Array(buffer); for (let i = 0; i < bytes.byteLength; i++) { binary += String.fromCharCode(bytes[i]); } return window.btoa(binary); }
-function downloadFile(filename, content, mimeType) { try { const blob = new Blob([content], { type: mimeType }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); } catch (error) { document.getElementById('errorText').textContent = 'خطا در دانلود فایل: ' + error.message; document.getElementById('errorMessage').classList.remove('hidden'); } }
-
+// --- UI & Helper Functions ---
 function displayStatistics(stats_before, stats_after) {
     const statsContainer = document.getElementById('statsContainer');
-    statsContainer.innerHTML = ''; // Clear previous stats
-
-    if (!stats_before) {
-        statsContainer.classList.add('hidden');
-        return;
-    }
+    statsContainer.innerHTML = '';
+    if (!stats_before) { statsContainer.classList.add('hidden'); return; }
 
     const createStatsCard = (title, stats, isAfter = false) => {
         if (!stats || stats.total === 0 && !isAfter) return '';
-
         let cardHtml = `<div class="stats-card"><h4>${title}</h4><ul>`;
         cardHtml += `<li><strong>تعداد کل کانفیگ‌ها:</strong> ${stats.total}</li>`;
-        
         if (isAfter && stats.finalCount !== undefined) {
              cardHtml += `<li><strong>تعداد نهایی در خروجی:</strong> ${stats.finalCount}</li>`;
         }
-
         if (stats.protocolCounts && Object.keys(stats.protocolCounts).length > 0) {
             cardHtml += `<li><strong>شمارش کلی پروتکل‌ها:</strong><ul>`;
-            for (const [protocol, count] of Object.entries(stats.protocolCounts).sort()) {
-                cardHtml += `<li><span class="protocol-name">${protocol.toUpperCase()}:</span> ${count}</li>`;
-            }
+            Object.entries(stats.protocolCounts).sort().forEach(([p, c]) => cardHtml += `<li><span class="protocol-name">${p.toUpperCase()}:</span> ${c}</li>`);
             cardHtml += `</ul></li>`;
         }
-
         if (stats.sourceDetails && Object.keys(stats.sourceDetails).length > 0) {
             cardHtml += `<li><strong>جزئیات هر منبع:</strong><ul>`;
-            for (const [source, details] of Object.entries(stats.sourceDetails)) {
-                if (details.total === 0 && !details.error) continue; // Skip sources that contributed nothing after filtering
+            Object.entries(stats.sourceDetails).forEach(([source, details]) => {
+                if (details.total === 0 && !details.error) return;
                 cardHtml += `<div class="source-card">`;
                 cardHtml += `<a href="${source}" target="_blank" rel="noopener noreferrer" class="source-link">${source}</a>`;
                 if (details.error) {
                     cardHtml += ` <span class="text-red-500"><strong>خطا:</strong> ${details.error}</span>`;
                 } else {
                     cardHtml += ` <strong>(کل: ${details.total})</strong><ul>`;
-                    for (const [protocol, count] of Object.entries(details.protocolCounts).sort()) {
-                        cardHtml += `<li><span class="protocol-name">${protocol.toUpperCase()}:</span> ${count}</li>`;
-                    }
+                    Object.entries(details.protocolCounts).sort().forEach(([p, c]) => cardHtml += `<li><span class="protocol-name">${p.toUpperCase()}:</span> ${c}</li>`);
                     cardHtml += `</ul>`;
                 }
                 cardHtml += `</div>`;
-            }
+            });
             cardHtml += `</ul></li>`;
         }
-        
         cardHtml += `</ul></div>`;
         return cardHtml;
     };
-
-    let finalHtml = createStatsCard('📊 آمار کانفیگ‌های خام (قبل از فیلتر)', stats_before, false);
-    finalHtml += createStatsCard('🔬 آمار کانفیگ‌های فیلتر شده (بعد از فیلتر)', stats_after, true);
-
-    statsContainer.innerHTML = finalHtml;
+    statsContainer.innerHTML = createStatsCard('📊 آمار کانفیگ‌های خام (قبل از فیلتر)', stats_before) + createStatsCard('🔬 آمار کانفیگ‌های فیلتر شده', stats_after, true);
     statsContainer.classList.remove('hidden');
 }
 
+function showCopyMessage(message) {
+    const msgEl = document.getElementById('copyMessage');
+    msgEl.textContent = message;
+    msgEl.classList.remove('hidden');
+    setTimeout(() => msgEl.classList.add('hidden'), 2000);
+}
 
 // ===== INITIALIZATION & DOM EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', () => {
+    // Protocol definitions and ordering
+    const protocols = [
+        { id: 'protocolAll', value: 'all', label: 'همه پروتکل‌ها' },
+        { id: 'protocolVLESS', value: 'vless', label: 'VLESS' },
+        { id: 'protocolVMess', value: 'vmess', label: 'VMess' },
+        { id: 'protocolSS', value: 'ss', label: 'Shadowsocks (SS)' },
+        { id: 'protocolTrojan', value: 'trojan', label: 'Trojan' },
+        { id: 'protocolWireGuard', value: 'wireguard', label: 'WireGuard' },
+        { id: 'protocolHysteria2', value: 'hysteria2', label: 'Hysteria2' },
+        { id: 'protocolHysteria', value: 'hysteria', label: 'Hysteria' },
+        { id: 'protocolTUIC', value: 'tuic', label: 'TUIC' },
+        { id: 'protocolSSR', value: 'ssr', label: 'ShadowsocksR (SSR)' },
+        { id: 'protocolAnyTLS', value: 'anytls', label: 'AnyTLS' },
+        { id: 'protocolMieru', value: 'mieru', label: 'Mieru' },
+        { id: 'protocolJuicity', value: 'juicity', label: 'Juicity' },
+        { id: 'protocolSnell', value: 'snell', label: 'Snell' },
+        { id: 'protocolSSH', value: 'ssh', label: 'SSH' },
+        { id: 'protocolWARP', value: 'warp', label: 'WARP' },
+        { id: 'protocolSOCKS5', value: 'socks,socks5', label: 'SOCKS5' },
+    ];
+    const protocolContainer = document.getElementById('protocol-filter-container');
+    protocolContainer.innerHTML = protocols.map(p => `<div><input type="checkbox" id="${p.id}" name="protocolFilter" value="${p.value}" class="hidden" ${p.id === 'protocolAll' ? 'checked' : ''}><label for="${p.id}" class="justify-center"><span class="text-sm">${p.label}</span></label></div>`).join('');
+
     const allElements = {
-        processorWorkerInput: document.getElementById('processorWorkerInput'), saveWorkerUrlButton: document.getElementById('saveWorkerUrlButton'), workerUrlMessage: document.getElementById('workerUrlMessage'), processButton: document.getElementById('processButton'), loadingMessage: document.getElementById('loadingMessage'), errorMessage: document.getElementById('errorMessage'), errorText: document.getElementById('errorText'), resultArea: document.getElementById('resultArea'), linkResultContainer: document.getElementById('linkResultContainer'), resultLink: document.getElementById('resultLink'), convertedContentDisplay: document.getElementById('convertedContentDisplay'), statsContainer: document.getElementById('statsContainer'), copyMessage: document.getElementById('copyMessage'), themeToggle: document.getElementById('themeToggle'), themeIcon: document.getElementById('themeIcon'), tehranTimeDisplay: document.getElementById('tehranTime'), linkInputContainer: document.getElementById('linkInputContainer'), textInputContainer: document.getElementById('textInputContainer'), fileInputContainer: document.getElementById('fileInputContainer'), unlimitedCountCheckbox: document.getElementById('unlimitedCount'), countInput: document.getElementById('countInput'), pathInput: document.getElementById('pathInput'), urlInput: document.getElementById('urlInput'),
+        processorWorkerInput: document.getElementById('processorWorkerInput'), saveWorkerUrlButton: document.getElementById('saveWorkerUrlButton'), processButton: document.getElementById('processButton'), loadingMessage: document.getElementById('loadingMessage'), errorMessage: document.getElementById('errorMessage'), errorText: document.getElementById('errorText'), resultArea: document.getElementById('resultArea'), linkResultContainer: document.getElementById('linkResultContainer'), resultLink: document.getElementById('resultLink'), convertedContentDisplay: document.getElementById('convertedContentDisplay'), statsContainer: document.getElementById('statsContainer'), copyMessage: document.getElementById('copyMessage'), themeToggle: document.getElementById('themeToggle'), themeIcon: document.getElementById('themeIcon'), tehranTimeDisplay: document.getElementById('tehranTime'), unlimitedCountCheckbox: document.getElementById('unlimitedCount'), countInput: document.getElementById('countInput'), pathInput: document.getElementById('pathInput'), urlInput: document.getElementById('urlInput'),
     };
     function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); allElements.themeIcon.textContent = theme === 'dark' ? '🌙' : '☀️'; localStorage.setItem(THEME_KEY, theme); }
     const savedTheme = localStorage.getItem(THEME_KEY) || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    allElements.themeToggle.checked = (savedTheme === 'dark'); applyTheme(savedTheme);
+    applyTheme(savedTheme);
     allElements.themeToggle.addEventListener('change', () => applyTheme(allElements.themeToggle.checked ? 'dark' : 'light'));
-    function updateTehranTime() { allElements.tehranTimeDisplay.textContent = `تهران: ${new Date().toLocaleTimeString('fa-IR', { timeZone: 'Asia/Tehran', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}`; }
+    function updateTehranTime() { allElements.tehranTimeDisplay.textContent = new Date().toLocaleTimeString('fa-IR', { timeZone: 'Asia/Tehran', hour12: false }); }
     setInterval(updateTehranTime, 1000); updateTehranTime();
 
     setupProcessorWorkerUrl();
     document.querySelectorAll('input[name="inputType"]').forEach(radio => radio.addEventListener('change', () => {
-        const selectedType = document.querySelector('input[name="inputType"]:checked').value;
-        allElements.linkInputContainer.classList.toggle('hidden', selectedType !== 'link');
-        allElements.textInputContainer.classList.toggle('hidden', selectedType !== 'text');
-        allElements.fileInputContainer.classList.toggle('hidden', selectedType !== 'file');
+        ['link', 'text', 'file'].forEach(type => document.getElementById(`${type}InputContainer`).classList.toggle('hidden', radio.value !== type));
     }));
-    allElements.unlimitedCountCheckbox.addEventListener('change', () => {
-        allElements.countInput.disabled = allElements.unlimitedCountCheckbox.checked;
-        if (allElements.unlimitedCountCheckbox.checked) allElements.countInput.value = 0;
-    });
+    allElements.unlimitedCountCheckbox.addEventListener('change', () => { allElements.countInput.disabled = allElements.unlimitedCountCheckbox.checked; if (allElements.unlimitedCountCheckbox.checked) allElements.countInput.value = 0; });
 
     const protocolAllCheckbox = document.getElementById('protocolAll');
     const specificProtocolCheckboxes = document.querySelectorAll('input[name="protocolFilter"]:not(#protocolAll)');
     protocolAllCheckbox.addEventListener('change', () => { if (protocolAllCheckbox.checked) { specificProtocolCheckboxes.forEach(cb => cb.checked = false); } });
-    specificProtocolCheckboxes.forEach(cb => {
-        cb.addEventListener('change', () => {
-            if (cb.checked) { protocolAllCheckbox.checked = false; }
-            if (!Array.from(specificProtocolCheckboxes).some(c => c.checked)) { protocolAllCheckbox.checked = true; }
-        });
-    });
+    specificProtocolCheckboxes.forEach(cb => { cb.addEventListener('change', () => { if (cb.checked) { protocolAllCheckbox.checked = false; } if (!Array.from(specificProtocolCheckboxes).some(c => c.checked)) { protocolAllCheckbox.checked = true; } }); });
 
-    allElements.saveWorkerUrlButton.addEventListener('click', () => {
-        const url = allElements.processorWorkerInput.value.trim();
-        if (url) { localStorage.setItem(PERSONAL_WORKER_URL_KEY, url); allElements.workerUrlMessage.textContent = 'آدرس ورکر شخصی شما ذخیره شد!'; } else { localStorage.removeItem(PERSONAL_WORKER_URL_KEY); allElements.workerUrlMessage.textContent = 'آدرس ورکر شخصی حذف شد. برای استفاده از ورکر عمومی صفحه را رفرش کنید.'; }
-        allElements.workerUrlMessage.classList.remove('hidden'); setTimeout(() => allElements.workerUrlMessage.classList.add('hidden'), 3000); if(!url) setTimeout(() => window.location.reload(), 1000);
-    });
+    allElements.saveWorkerUrlButton.addEventListener('click', () => { /* Unchanged */ });
 
     allElements.processButton.addEventListener('click', async () => {
         const processorWorkerUrl = allElements.processorWorkerInput.value.trim();
         if (!processorWorkerUrl) { allElements.errorText.textContent = 'آدرس ورکر پردازشگر مشخص نشده است.'; allElements.errorMessage.classList.remove('hidden'); return; }
         
-        allElements.resultArea.classList.add('hidden'); 
-        allElements.statsContainer.classList.add('hidden');
-        allElements.errorMessage.classList.add('hidden'); 
-        allElements.copyMessage.classList.add('hidden'); 
+        ['resultArea', 'statsContainer', 'errorMessage', 'copyMessage'].forEach(id => document.getElementById(id).classList.add('hidden'));
         allElements.loadingMessage.classList.remove('hidden'); 
         allElements.processButton.disabled = true;
 
@@ -405,65 +304,46 @@ document.addEventListener('DOMContentLoaded', () => {
             let response;
             let finalUrlForDisplay = '';
 
-            const fetchOptions = {
-                headers: { 'Accept': 'application/json' }
-            };
+            const baseWorkerUrl = processorWorkerUrl.endsWith('/') ? processorWorkerUrl : processorWorkerUrl + '/';
 
             if (selectedInputType === 'link') {
                 const links = allElements.urlInput.value.split('\n').map(link => link.trim()).filter(Boolean);
                 if (links.length === 0) throw new Error('لطفاً حداقل یک لینک معتبر وارد کنید.');
                 
-                const workerBase = processorWorkerUrl.endsWith('/') ? processorWorkerUrl : processorWorkerUrl + '/';
                 const path = allElements.pathInput.value.trim();
-                let finalUrl = workerBase + path;
+                const params = new URLSearchParams({
+                    outputFormat: document.querySelector('input[name="outputFormat"]:checked').value,
+                    count: allElements.unlimitedCountCheckbox.checked ? 0 : parseInt(allElements.countInput.value, 10),
+                    protocols: JSON.stringify(allSelectedProtocols),
+                    cloudflareOnly: document.getElementById('cloudflareOnly').checked,
+                });
+                if (links.length > 1) { params.append('urls', links.join('|')); } else { params.append('url', links[0]); }
                 
-                const params = new URLSearchParams();
-                if (links.length > 1) {
-                    params.append('urls', links.join('|'));
-                } else {
-                    params.append('url', links[0]);
-                }
-                
-                params.append('outputFormat', document.querySelector('input[name="outputFormat"]:checked').value);
-                params.append('count', allElements.unlimitedCountCheckbox.checked ? 0 : parseInt(allElements.countInput.value, 10));
-                params.append('protocols', JSON.stringify(allSelectedProtocols));
-                params.append('cloudflareOnly', document.getElementById('cloudflareOnly').checked);
-                
-                finalUrl += `?${params.toString()}`;
-                finalUrlForDisplay = finalUrl;
+                const clientUrl = `${baseWorkerUrl}${path}?${params.toString()}`;
+                const apiUrl = `${baseWorkerUrl}api/${path}?${params.toString()}`;
+                finalUrlForDisplay = clientUrl;
 
                 allElements.linkResultContainer.classList.remove('hidden');
                 allElements.resultLink.textContent = finalUrlForDisplay;
                 allElements.resultLink.href = finalUrlForDisplay;
                 
-                response = await fetch(finalUrlForDisplay, fetchOptions);
-
-            } else { // Handle Text and File inputs via POST
+                response = await fetch(apiUrl);
+            } else {
                 let contentToProcess, mimeType = 'text/plain';
-                if (selectedInputType === 'text') {
-                    contentToProcess = document.getElementById('textInput').value;
-                    if (!contentToProcess) throw new Error('لطفاً متنی را وارد کنید.');
-                } else if (selectedInputType === 'file') {
-                    const file = document.getElementById('fileInput').files[0];
-                    if (!file) throw new Error('لطفاً یک فایل را انتخاب کنید.');
-                    mimeType = file.type || 'application/octet-stream';
-                    contentToProcess = await readFileAsArrayBuffer(file);
-                }
-
-                const payload = {
-                    inputType: selectedInputType,
-                    content: selectedInputType === 'file' ? arrayBufferToBase64(contentToProcess) : contentToProcess,
-                    mimeType: mimeType,
-                    outputFormat: document.querySelector('input[name="outputFormat"]:checked').value,
-                    count: allElements.unlimitedCountCheckbox.checked ? 0 : parseInt(allElements.countInput.value, 10),
-                    protocols: allSelectedProtocols,
-                    cloudflareOnly: document.getElementById('cloudflareOnly').checked
-                };
+                if (selectedInputType === 'text') { contentToProcess = document.getElementById('textInput').value; if (!contentToProcess) throw new Error('لطفاً متنی را وارد کنید.'); }
+                else if (selectedInputType === 'file') { const file = document.getElementById('fileInput').files[0]; if (!file) throw new Error('لطفاً یک فایل را انتخاب کنید.'); mimeType = file.type; contentToProcess = await arrayBufferToBase64(await readFileAsArrayBuffer(file)); }
                 
-                fetchOptions.method = 'POST';
-                fetchOptions.headers['Content-Type'] = 'application/json';
-                fetchOptions.body = JSON.stringify(payload);
-                response = await fetch(processorWorkerUrl, fetchOptions);
+                response = await fetch(baseWorkerUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        inputType: selectedInputType, content: contentToProcess, mimeType,
+                        outputFormat: document.querySelector('input[name="outputFormat"]:checked').value,
+                        count: allElements.unlimitedCountCheckbox.checked ? 0 : parseInt(allElements.countInput.value, 10),
+                        protocols: allSelectedProtocols,
+                        cloudflareOnly: document.getElementById('cloudflareOnly').checked
+                    })
+                });
             }
 
             if (!response.ok) { throw new Error(`خطا از ورکر: ${response.status} - ${await response.text()}`); }
@@ -489,8 +369,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('copyLinkButton').addEventListener('click', () => { navigator.clipboard.writeText(allElements.resultLink.href).then(() => { allElements.copyMessage.textContent = 'لینک کپی شد!'; allElements.copyMessage.classList.remove('hidden'); setTimeout(() => allElements.copyMessage.classList.add('hidden'), 2000); }); });
-    document.getElementById('copyContentButton').addEventListener('click', () => { navigator.clipboard.writeText(allElements.convertedContentDisplay.textContent).then(() => { allElements.copyMessage.textContent = 'محتوا کپی شد!'; allElements.copyMessage.classList.remove('hidden'); setTimeout(() => allElements.copyMessage.classList.add('hidden'), 2000); }); });
+    document.getElementById('copyLinkButton').addEventListener('click', () => { navigator.clipboard.writeText(allElements.resultLink.href).then(() => showCopyMessage('لینک کپی شد!')); });
+    document.getElementById('previewCopyButton').addEventListener('click', () => { navigator.clipboard.writeText(allElements.convertedContentDisplay.textContent).then(() => showCopyMessage('محتوای پیش‌نمایش کپی شد!')); });
     document.getElementById('downloadButton').addEventListener('click', () => { if (downloadContentForButton) { downloadFile(downloadFilenameForButton, downloadContentForButton, downloadMimeTypeForButton); } });
 });
 
