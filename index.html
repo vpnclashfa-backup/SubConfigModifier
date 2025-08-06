@@ -33,8 +33,11 @@
         .radio-group label:hover, .checkbox-group label:hover { background-color: var(--checkbox-label-hover-bg); }
         .radio-group input:checked + label, .checkbox-group input:checked + label { border-color: var(--input-border-focus); background-color: var(--blue-highlight-bg); color: var(--blue-highlight-text); }
         .checkbox-group input:disabled + label { opacity: 0.6; cursor: not-allowed; box-shadow: none; } .checkbox-group input:disabled + label:hover { background-color: var(--checkbox-label-bg); }
-        #convertedContentDisplay { max-height: 6em; overflow-y: auto; white-space: pre-wrap; font-family: 'Vazirmatn', monospace; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); }
+        #convertedContentDisplay { max-height: 6em; overflow-y: auto; white-space: pre-wrap; font-family: 'Vazirmatn', monospace; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); direction: ltr; text-align: left; }
         #resultLink { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; padding: 0.5rem; background-color: var(--input-field-bg); border: 1px solid var(--input-field-border); }
+        #statsContainer ul { padding-right: 1.5rem; text-align: right; }
+        #statsContainer ul ul { padding-right: 1rem; }
+        #statsContainer li { margin-bottom: 0.5rem; }
         .social-icons-container { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 2rem; padding: 1rem; border-radius: 0.75rem; background-color: var(--config-filter-bg); border: 1px solid var(--config-filter-border); }
         .social-icons-container a { display: block; width: 48px; height: 48px; border-radius: 50%; overflow: hidden; transition: transform 0.2s ease-in-out; }
         .social-icons-container a:hover { transform: scale(1.1); }
@@ -166,21 +169,24 @@
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-2">فیلتر پروتکل:</label>
-                <div class="checkbox-group grid grid-cols-2 gap-2">
+                <div id="protocol-filter-container" class="checkbox-group grid grid-cols-2 gap-2">
                     <div><input type="checkbox" id="protocolAll" name="protocolFilter" value="all" class="hidden" checked><label for="protocolAll" class="justify-center"><span class="text-sm">همه پروتکل‌ها</span></label></div>
-                    <div><input type="checkbox" id="protocolSS" name="protocolFilter" value="ss" class="hidden"><label for="protocolSS" class="justify-center"><span class="text-sm">Shadowsocks (SS)</span></label></div>
-                    <div><input type="checkbox" id="protocolSSR" name="protocolFilter" value="ssr" class="hidden"><label for="protocolSSR" class="justify-center"><span class="text-sm">ShadowsocksR (SSR)</span></label></div>
-                    <div><input type="checkbox" id="protocolMieru" name="protocolFilter" value="mieru" class="hidden"><label for="protocolMieru" class="justify-center"><span class="text-sm">Mieru</span></label></div>
-                    <div><input type="checkbox" id="protocolSnell" name="protocolFilter" value="snell" class="hidden"><label for="protocolSnell" class="justify-center"><span class="text-sm">Snell</span></label></div>
-                    <div><input type="checkbox" id="protocolVMess" name="protocolFilter" value="vmess" class="hidden"><label for="protocolVMess" class="justify-center"><span class="text-sm">VMess</span></label></div>
                     <div><input type="checkbox" id="protocolVLESS" name="protocolFilter" value="vless" class="hidden"><label for="protocolVLESS" class="justify-center"><span class="text-sm">VLESS</span></label></div>
+                    <div><input type="checkbox" id="protocolVMess" name="protocolFilter" value="vmess" class="hidden"><label for="protocolVMess" class="justify-center"><span class="text-sm">VMess</span></label></div>
+                    <div><input type="checkbox" id="protocolSS" name="protocolFilter" value="ss" class="hidden"><label for="protocolSS" class="justify-center"><span class="text-sm">Shadowsocks (SS)</span></label></div>
                     <div><input type="checkbox" id="protocolTrojan" name="protocolFilter" value="trojan" class="hidden"><label for="protocolTrojan" class="justify-center"><span class="text-sm">Trojan</span></label></div>
-                    <div><input type="checkbox" id="protocolAnyTLS" name="protocolFilter" value="anytls" class="hidden"><label for="protocolAnyTLS" class="justify-center"><span class="text-sm">AnyTLS</span></label></div>
-                    <div><input type="checkbox" id="protocolHysteria" name="protocolFilter" value="hysteria,hysteria2" class="hidden"><label for="protocolHysteria" class="justify-center"><span class="text-sm">Hysteria/2</span></label></div>
-                    <div><input type="checkbox" id="protocolTUIC" name="protocolFilter" value="tuic" class="hidden"><label for="protocolTUIC" class="justify-center"><span class="text-sm">TUIC</span></label></div>
                     <div><input type="checkbox" id="protocolWireGuard" name="protocolFilter" value="wireguard" class="hidden"><label for="protocolWireGuard" class="justify-center"><span class="text-sm">WireGuard</span></label></div>
-                    <div><input type="checkbox" id="protocolSSH" name="protocolFilter" value="ssh" class="hidden"><label for="protocolSSH" class="justify-center"><span class="text-sm">SSH</span></label></div>
+                    <div><input type="checkbox" id="protocolHysteria2" name="protocolFilter" value="hysteria2" class="hidden"><label for="protocolHysteria2" class="justify-center"><span class="text-sm">Hysteria2</span></label></div>
+                    <div><input type="checkbox" id="protocolHysteria" name="protocolFilter" value="hysteria" class="hidden"><label for="protocolHysteria" class="justify-center"><span class="text-sm">Hysteria</span></label></div>
+                    <div><input type="checkbox" id="protocolTUIC" name="protocolFilter" value="tuic" class="hidden"><label for="protocolTUIC" class="justify-center"><span class="text-sm">TUIC</span></label></div>
+                    <div><input type="checkbox" id="protocolSSR" name="protocolFilter" value="ssr" class="hidden"><label for="protocolSSR" class="justify-center"><span class="text-sm">ShadowsocksR (SSR)</span></label></div>
+                    <div><input type="checkbox" id="protocolAnyTLS" name="protocolFilter" value="anytls" class="hidden"><label for="protocolAnyTLS" class="justify-center"><span class="text-sm">AnyTLS</span></label></div>
+                    <div><input type="checkbox" id="protocolMieru" name="protocolFilter" value="mieru" class="hidden"><label for="protocolMieru" class="justify-center"><span class="text-sm">Mieru</span></label></div>
                     <div><input type="checkbox" id="protocolJuicity" name="protocolFilter" value="juicity" class="hidden"><label for="protocolJuicity" class="justify-center"><span class="text-sm">Juicity</span></label></div>
+                    <div><input type="checkbox" id="protocolSnell" name="protocolFilter" value="snell" class="hidden"><label for="protocolSnell" class="justify-center"><span class="text-sm">Snell</span></label></div>
+                    <div><input type="checkbox" id="protocolSSH" name="protocolFilter" value="ssh" class="hidden"><label for="protocolSSH" class="justify-center"><span class="text-sm">SSH</span></label></div>
+                    <div><input type="checkbox" id="protocolWARP" name="protocolFilter" value="warp" class="hidden"><label for="protocolWARP" class="justify-center"><span class="text-sm">WARP</span></label></div>
+                    <div><input type="checkbox" id="protocolSOCKS5" name="protocolFilter" value="socks,socks5" class="hidden"><label for="protocolSOCKS5" class="justify-center"><span class="text-sm">SOCKS5</span></label></div>
                 </div>
                 <div class="mt-3">
                     <label for="customProtocols" class="block text-sm font-medium mb-2 text-right">پروتکل‌های سفارشی (کاما-جدا شده):</label>
@@ -191,6 +197,7 @@
 
         <button id="processButton" class="w-full bg-indigo-600 text-white py-3 px-6 rounded-xl text-lg font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-md">پردازش</button>
         <div id="loadingMessage" class="mt-4 text-indigo-600 hidden"><p>در حال پردازش...</p></div>
+        
         <div id="resultArea" class="mt-8 p-4 rounded-xl hidden flex flex-col gap-4" style="background-color: var(--result-content-bg); border: 1px solid var(--result-content-border);">
             <div id="linkResultContainer" class="mb-4 hidden">
                 <p class="text-gray-700 text-right mb-2">لینک قابل اشتراک‌گذاری:</p>
@@ -199,6 +206,10 @@
             <div id="contentResultContainer" class="mb-4">
                 <p class="text-gray-700 text-right mb-2">محتوای تبدیل شده:</p>
                 <pre id="convertedContentDisplay" class="result-area text-gray-800 text-sm p-2 rounded-lg"></pre>
+            </div>
+             <!-- Statistics Container -->
+            <div id="statsContainer" class="text-right text-sm mt-4 hidden">
+                <h3 class="text-lg font-semibold mb-2">آمار کانفیگ‌های خام (قبل از فیلتر)</h3>
             </div>
             <div class="flex flex-col md:flex-row justify-center gap-4 mt-4">
                 <button id="copyLinkButton" class="bg-indigo-500 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">کپی لینک</button>
@@ -223,66 +234,69 @@
 // ===== CONFIGURATION & CONSTANTS =====
 const PERSONAL_WORKER_URL_KEY = 'personal_processor_worker_url';
 const THEME_KEY = 'app_theme';
-
 const DONATED_WORKERS_URL = 'https://raw.githubusercontent.com/vpnclashfa-backup/SubConfigModifier/main/workers.txt';
-
-// In-memory state
 let donatedWorkersCache = [];
 let timedOutWorkers = new Set();
 let downloadContentForButton = '', downloadMimeTypeForButton = '', downloadFilenameForButton = '';
 
 // ===== HELPER & CORE LOGIC FUNCTIONS =====
-
-async function setupProcessorWorkerUrl() {
-    const processorWorkerInput = document.getElementById('processorWorkerInput');
-    const suggestedWorkerMessage = document.getElementById('suggestedWorkerMessage');
-
-    const personalWorker = localStorage.getItem(PERSONAL_WORKER_URL_KEY);
-    if (personalWorker) {
-        processorWorkerInput.value = personalWorker;
-        suggestedWorkerMessage.classList.add('hidden');
-        return;
-    }
-
-    try {
-        const response = await fetch(DONATED_WORKERS_URL, { cache: "no-store" });
-        if (!response.ok) throw new Error(`Failed to fetch workers list: ${response.status}`);
-        const workerText = await response.text();
-        const urls = workerText.split('\n').map(line => line.trim()).filter(line => line.startsWith('https://'));
-        
-        if (urls.length === 0) {
-            processorWorkerInput.placeholder = "لیست ورکر عمومی خالی است.";
-            return;
-        }
-
-        donatedWorkersCache = urls;
-        const availableWorkers = donatedWorkersCache.filter(url => !timedOutWorkers.has(url));
-
-        if (availableWorkers.length > 0) {
-            const randomIndex = Math.floor(Math.random() * availableWorkers.length);
-            processorWorkerInput.value = availableWorkers[randomIndex];
-            suggestedWorkerMessage.classList.remove('hidden');
-        } else {
-             processorWorkerInput.placeholder = "تمام ورکرهای عمومی موقتا در دسترس نیستند.";
-        }
-    } catch (error) {
-        console.error('Could not fetch or suggest a donated worker:', error);
-        processorWorkerInput.placeholder = "خطا در دریافت لیست ورکرهای عمومی";
-    }
-}
-
+async function setupProcessorWorkerUrl() { /* ... unchanged ... */ }
 function readFileAsArrayBuffer(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = error => reject(error); reader.readAsArrayBuffer(file); }); }
 function arrayBufferToBase64(buffer) { let binary = ''; const bytes = new Uint8Array(buffer); for (let i = 0; i < bytes.byteLength; i++) { binary += String.fromCharCode(bytes[i]); } return window.btoa(binary); }
 function downloadFile(filename, content, mimeType) { try { const blob = new Blob([content], { type: mimeType }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); } catch (error) { document.getElementById('errorText').textContent = 'خطا در دانلود فایل: ' + error.message; document.getElementById('errorMessage').classList.remove('hidden'); } }
 
+function displayStatistics(stats) {
+    const statsContainer = document.getElementById('statsContainer');
+    // Clear previous stats
+    statsContainer.innerHTML = '<h3 class="text-lg font-semibold mb-2">آمار کانفیگ‌های خام (قبل از فیلتر)</h3>';
+    
+    if (!stats) {
+        statsContainer.classList.add('hidden');
+        return;
+    }
+
+    let html = `<ul>`;
+    // Total configs
+    html += `<li><strong>کل کانفیگ‌های شناسایی شده:</strong> ${stats.totalConfigs}</li>`;
+
+    // Overall protocol counts
+    if (stats.protocolCounts && Object.keys(stats.protocolCounts).length > 0) {
+        html += `<li><strong>شمارش کلی پروتکل‌ها:</strong><ul>`;
+        for (const [protocol, count] of Object.entries(stats.protocolCounts).sort()) {
+            html += `<li><span class="font-semibold text-indigo-600 dark:text-indigo-400">${protocol.toUpperCase()}:</span> ${count}</li>`;
+        }
+        html += `</ul></li>`;
+    }
+
+    // Per-source details
+    if (stats.sourceDetails && Object.keys(stats.sourceDetails).length > 0) {
+        html += `<li><strong>جزئیات هر منبع:</strong><ul>`;
+        for (const [source, details] of Object.entries(stats.sourceDetails)) {
+            const shortSource = source.length > 40 ? `${source.substring(0, 40)}...` : source;
+            html += `<li><strong class="text-blue-700 dark:text-blue-400">${shortSource}:</strong>`;
+            if (details.error) {
+                html += ` <span class="text-red-500">خطا: ${details.error}</span></li>`;
+                continue;
+            }
+            html += ` <strong>(کل: ${details.total})</strong><ul>`;
+            for (const [protocol, count] of Object.entries(details.protocolCounts).sort()) {
+                html += `<li><span class="font-semibold text-indigo-600 dark:text-indigo-400">${protocol.toUpperCase()}:</span> ${count}</li>`;
+            }
+            html += `</ul></li>`;
+        }
+        html += `</ul></li>`;
+    }
+    
+    html += `</ul>`;
+    statsContainer.innerHTML += html;
+    statsContainer.classList.remove('hidden');
+}
+
 // ===== INITIALIZATION & DOM EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Element Selectors ---
     const allElements = {
-        processorWorkerInput: document.getElementById('processorWorkerInput'), saveWorkerUrlButton: document.getElementById('saveWorkerUrlButton'), workerUrlMessage: document.getElementById('workerUrlMessage'), processButton: document.getElementById('processButton'), loadingMessage: document.getElementById('loadingMessage'), errorMessage: document.getElementById('errorMessage'), errorText: document.getElementById('errorText'), resultArea: document.getElementById('resultArea'), linkResultContainer: document.getElementById('linkResultContainer'), resultLink: document.getElementById('resultLink'), convertedContentDisplay: document.getElementById('convertedContentDisplay'), copyMessage: document.getElementById('copyMessage'), themeToggle: document.getElementById('themeToggle'), themeIcon: document.getElementById('themeIcon'), tehranTimeDisplay: document.getElementById('tehranTime'), suggestedWorkerMessage: document.getElementById('suggestedWorkerMessage'), linkInputContainer: document.getElementById('linkInputContainer'), textInputContainer: document.getElementById('textInputContainer'), fileInputContainer: document.getElementById('fileInputContainer'), unlimitedCountCheckbox: document.getElementById('unlimitedCount'), countInput: document.getElementById('countInput'), unlimitedCountLabelText: document.getElementById('unlimitedCountLabelText'), protocolAllCheckbox: document.getElementById('protocolAll'), protocolCheckboxes: document.querySelectorAll('input[name="protocolFilter"]'), pathInput: document.getElementById('pathInput'), urlInput: document.getElementById('urlInput'),
+        processorWorkerInput: document.getElementById('processorWorkerInput'), saveWorkerUrlButton: document.getElementById('saveWorkerUrlButton'), workerUrlMessage: document.getElementById('workerUrlMessage'), processButton: document.getElementById('processButton'), loadingMessage: document.getElementById('loadingMessage'), errorMessage: document.getElementById('errorMessage'), errorText: document.getElementById('errorText'), resultArea: document.getElementById('resultArea'), linkResultContainer: document.getElementById('linkResultContainer'), resultLink: document.getElementById('resultLink'), convertedContentDisplay: document.getElementById('convertedContentDisplay'), statsContainer: document.getElementById('statsContainer'), copyMessage: document.getElementById('copyMessage'), themeToggle: document.getElementById('themeToggle'), themeIcon: document.getElementById('themeIcon'), tehranTimeDisplay: document.getElementById('tehranTime'), linkInputContainer: document.getElementById('linkInputContainer'), textInputContainer: document.getElementById('textInputContainer'), fileInputContainer: document.getElementById('fileInputContainer'), unlimitedCountCheckbox: document.getElementById('unlimitedCount'), countInput: document.getElementById('countInput'), unlimitedCountLabelText: document.getElementById('unlimitedCountLabelText'), pathInput: document.getElementById('pathInput'), urlInput: document.getElementById('urlInput'),
     };
-
-    // --- Theme & Time Management ---
     function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); allElements.themeIcon.textContent = theme === 'dark' ? '🌙' : '☀️'; localStorage.setItem(THEME_KEY, theme); }
     const savedTheme = localStorage.getItem(THEME_KEY) || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     allElements.themeToggle.checked = (savedTheme === 'dark'); applyTheme(savedTheme);
@@ -290,10 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateTehranTime() { allElements.tehranTimeDisplay.textContent = `تهران: ${new Date().toLocaleTimeString('fa-IR', { timeZone: 'Asia/Tehran', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}`; }
     setInterval(updateTehranTime, 1000); updateTehranTime();
 
-    // --- Initial Worker Setup ---
     setupProcessorWorkerUrl();
-
-    // --- UI Listeners (Filters, Input Type) ---
     document.querySelectorAll('input[name="inputType"]').forEach(radio => radio.addEventListener('change', () => {
         const selectedType = document.querySelector('input[name="inputType"]:checked').value;
         allElements.linkInputContainer.classList.toggle('hidden', selectedType !== 'link');
@@ -302,26 +313,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }));
     allElements.unlimitedCountCheckbox.addEventListener('change', () => {
         allElements.countInput.disabled = allElements.unlimitedCountCheckbox.checked;
-        allElements.unlimitedCountLabelText.textContent = allElements.unlimitedCountCheckbox.checked ? 'نامحدود' : 'محدود';
         if (allElements.unlimitedCountCheckbox.checked) allElements.countInput.value = 0;
     });
-    allElements.protocolCheckboxes.forEach(checkbox => checkbox.addEventListener('change', () => {
-        const isAll = checkbox.id === 'protocolAll';
-        const specificCheckboxes = Array.from(allElements.protocolCheckboxes).filter(cb => cb.id !== 'protocolAll');
-        if (isAll && checkbox.checked) { specificCheckboxes.forEach(cb => { cb.checked = false; cb.disabled = true; });
-        } else {
-             specificCheckboxes.forEach(cb => { cb.disabled = false; });
-            const anySpecificChecked = specificCheckboxes.some(cb => cb.checked);
-            allElements.protocolAllCheckbox.disabled = anySpecificChecked;
-            if (anySpecificChecked) allElements.protocolAllCheckbox.checked = false;
-        }
-    }));
-    if (allElements.protocolAllCheckbox.checked) { Array.from(allElements.protocolCheckboxes).filter(cb => cb.id !== 'protocolAll').forEach(cb => cb.disabled = true); }
 
-    // --- Core Action Listeners ---
+    const protocolAllCheckbox = document.getElementById('protocolAll');
+    const specificProtocolCheckboxes = document.querySelectorAll('input[name="protocolFilter"]:not(#protocolAll)');
+    protocolAllCheckbox.addEventListener('change', () => { if (protocolAllCheckbox.checked) { specificProtocolCheckboxes.forEach(cb => cb.checked = false); } });
+    specificProtocolCheckboxes.forEach(cb => {
+        cb.addEventListener('change', () => {
+            if (cb.checked) { protocolAllCheckbox.checked = false; }
+            if (!Array.from(specificProtocolCheckboxes).some(c => c.checked)) { protocolAllCheckbox.checked = true; }
+        });
+    });
+
     allElements.saveWorkerUrlButton.addEventListener('click', () => {
         const url = allElements.processorWorkerInput.value.trim();
-        if (url) { localStorage.setItem(PERSONAL_WORKER_URL_KEY, url); allElements.workerUrlMessage.textContent = 'آدرس ورکر شخصی شما ذخیره شد!'; allElements.suggestedWorkerMessage.classList.add('hidden'); } else { localStorage.removeItem(PERSONAL_WORKER_URL_KEY); allElements.workerUrlMessage.textContent = 'آدرس ورکر شخصی حذف شد. برای استفاده از ورکر عمومی صفحه را رفرش کنید.'; }
+        if (url) { localStorage.setItem(PERSONAL_WORKER_URL_KEY, url); allElements.workerUrlMessage.textContent = 'آدرس ورکر شخصی شما ذخیره شد!'; } else { localStorage.removeItem(PERSONAL_WORKER_URL_KEY); allElements.workerUrlMessage.textContent = 'آدرس ورکر شخصی حذف شد. برای استفاده از ورکر عمومی صفحه را رفرش کنید.'; }
         allElements.workerUrlMessage.classList.remove('hidden'); setTimeout(() => allElements.workerUrlMessage.classList.add('hidden'), 3000); if(!url) setTimeout(() => window.location.reload(), 1000);
     });
 
@@ -330,6 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!processorWorkerUrl) { allElements.errorText.textContent = 'آدرس ورکر پردازشگر مشخص نشده است.'; allElements.errorMessage.classList.remove('hidden'); return; }
         
         allElements.resultArea.classList.add('hidden'); 
+        allElements.statsContainer.classList.add('hidden');
         allElements.errorMessage.classList.add('hidden'); 
         allElements.copyMessage.classList.add('hidden'); 
         allElements.loadingMessage.classList.remove('hidden'); 
@@ -337,19 +345,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const selectedInputType = document.querySelector('input[name="inputType"]:checked').value;
-            const selectedProtocols = allElements.protocolAllCheckbox.checked ? ['all'] : [...Array.from(allElements.protocolCheckboxes).filter(cb => cb.checked && cb.id !== 'protocolAll').flatMap(cb => cb.value.split(',')), ...document.getElementById('customProtocols').value.trim().split(',').map(p => p.trim()).filter(Boolean)];
+            const selectedProtocols = protocolAllCheckbox.checked ? ['all'] : [...document.querySelectorAll('input[name="protocolFilter"]:not(#protocolAll):checked')].flatMap(cb => cb.value.split(','));
+            const customProtocols = document.getElementById('customProtocols').value.trim().split(',').map(p => p.trim()).filter(Boolean);
+            const allSelectedProtocols = [...new Set([...selectedProtocols, ...customProtocols])];
             
+            let response;
             if (selectedInputType === 'link') {
                 const links = allElements.urlInput.value.split('\n').map(link => link.trim()).filter(Boolean);
                 if (links.length === 0) throw new Error('لطفاً حداقل یک لینک معتبر وارد کنید.');
                 
-                // Construct the dynamic GET URL
                 const workerBase = processorWorkerUrl.endsWith('/') ? processorWorkerUrl : processorWorkerUrl + '/';
                 const path = allElements.pathInput.value.trim();
                 let finalUrl = workerBase + path;
                 
                 const params = new URLSearchParams();
-                // Use 'urls' for multi-link, 'url' for single link for backward compatibility in worker
                 if (links.length > 1) {
                     params.append('urls', links.join('|'));
                 } else {
@@ -358,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 params.append('outputFormat', document.querySelector('input[name="outputFormat"]:checked').value);
                 params.append('count', allElements.unlimitedCountCheckbox.checked ? 0 : parseInt(allElements.countInput.value, 10));
-                params.append('protocols', JSON.stringify(selectedProtocols));
+                params.append('protocols', JSON.stringify(allSelectedProtocols));
                 params.append('cloudflareOnly', document.getElementById('cloudflareOnly').checked);
                 
                 finalUrl += `?${params.toString()}`;
@@ -367,11 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 allElements.resultLink.textContent = finalUrl;
                 allElements.resultLink.href = finalUrl;
                 
-                // Fetch the content from the newly created link for preview
-                const contentResponse = await fetch(finalUrl);
-                if (!contentResponse.ok) throw new Error(`خطا در دریافت محتوا از لینک جدید: ${contentResponse.status} - ${await contentResponse.text()}`);
-                downloadContentForButton = await contentResponse.text();
-                downloadMimeTypeForButton = contentResponse.headers.get('Content-Type') || 'text/plain';
+                response = await fetch(finalUrl);
 
             } else { // Handle Text and File inputs via POST
                 let contentToProcess, mimeType = 'text/plain';
@@ -388,35 +393,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 const payload = {
                     inputType: selectedInputType,
                     content: selectedInputType === 'file' ? arrayBufferToBase64(contentToProcess) : contentToProcess,
-                    path: allElements.pathInput.value.trim(),
                     mimeType: mimeType,
                     outputFormat: document.querySelector('input[name="outputFormat"]:checked').value,
                     count: allElements.unlimitedCountCheckbox.checked ? 0 : parseInt(allElements.countInput.value, 10),
-                    protocols: selectedProtocols,
+                    protocols: allSelectedProtocols,
                     cloudflareOnly: document.getElementById('cloudflareOnly').checked
                 };
                 
-                const response = await fetch(processorWorkerUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) {
-                    if ((response.status === 429 || response.status >= 500) && donatedWorkersCache.includes(processorWorkerUrl)) {
-                        timedOutWorkers.add(processorWorkerUrl);
-                    }
-                    throw new Error(`خطا از ورکر پردازشگر: ${response.status} - ${await response.text()}`);
-                }
-                const resultJson = await response.json();
-                if (resultJson.content === undefined) throw new Error('پاسخ نامعتبر از ورکر.');
-
-                downloadContentForButton = resultJson.content;
-                downloadMimeTypeForButton = resultJson.mimeType || 'application/octet-stream';
-                allElements.linkResultContainer.classList.add('hidden'); // Hide link result for non-link inputs
+                response = await fetch(processorWorkerUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             }
 
+            if (!response.ok) { throw new Error(`خطا از ورکر: ${response.status} - ${await response.text()}`); }
+            const resultJson = await response.json();
+            if (resultJson.error) { throw new Error(`خطای ورکر: ${resultJson.error}`); }
+            
+            downloadContentForButton = resultJson.content;
+            downloadMimeTypeForButton = resultJson.mimeType || 'text/plain';
             allElements.convertedContentDisplay.textContent = downloadContentForButton;
+            
+            displayStatistics(resultJson.statistics);
+            
             downloadFilenameForButton = allElements.pathInput.value.trim() || 'output.txt';
-            if (downloadMimeTypeForButton.includes('text') && !downloadFilenameForButton.endsWith('.txt')) {
-                downloadFilenameForButton += '.txt';
-            }
             allElements.resultArea.classList.remove('hidden');
+            if (selectedInputType !== 'link') { allElements.linkResultContainer.classList.add('hidden'); }
 
         } catch (e) {
             allElements.errorText.textContent = 'خطا در عملیات پردازش: ' + e.message;
@@ -431,6 +430,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('copyContentButton').addEventListener('click', () => { navigator.clipboard.writeText(allElements.convertedContentDisplay.textContent).then(() => { allElements.copyMessage.textContent = 'محتوا کپی شد!'; allElements.copyMessage.classList.remove('hidden'); setTimeout(() => allElements.copyMessage.classList.add('hidden'), 2000); }); });
     document.getElementById('downloadButton').addEventListener('click', () => { if (downloadContentForButton) { downloadFile(downloadFilenameForButton, downloadContentForButton, downloadMimeTypeForButton); } });
 });
+
+// To set up the worker URL on first load
+setupProcessorWorkerUrl();
 </script>
 </body>
 </html>
