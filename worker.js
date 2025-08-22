@@ -155,7 +155,7 @@ function groupConfigsByProtocol(configLines, protocolPriorityList) {
     const grouped = {};
     const protocolMap = new Map();
 
-    // Create a map for quick lookup: e.g., 'vless' -> 'vless'
+    // Create a map for quick lookup: e.g., 'vless' -> 'vless', 'hy2' -> 'hysteria2,hy2'
     protocolPriorityList.forEach(p => {
         const types = p.protocol.split(',').map(t => t.trim().toLowerCase());
         types.forEach(type => protocolMap.set(type, p.protocol));
@@ -182,7 +182,6 @@ function groupConfigsByProtocol(configLines, protocolPriorityList) {
 
 /**
  * Recursively fetches content from URLs and extracts all valid configurations.
- * (This function is largely unchanged but kept for completeness).
  * @param {string|string[]} initialContent - The initial input.
  * @param {string} initialType - 'link', 'text', or 'file'.
  * @param {number} [maxDepth=3] - Maximum recursion depth.
@@ -262,30 +261,61 @@ async function recursivelyFetchAndExtractConfigs(initialContent, initialType, ma
 }
 
 
-// --- HELPER FUNCTIONS (UNCHANGED) ---
+// --- HELPER FUNCTIONS ---
 function js_isBase64(s) { s = s.trim(); if (!s) return false; try { return btoa(atob(s)) === s; } catch (err) { return false; } }
 function js_encodeBase64(s) { return btoa(unescape(encodeURIComponent(s))); }
 function js_decodeBase64(s) { return decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/')))); }
 function js_shuffleArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } }
 function js_replaceSsconf(content) { return content.replace(/Ssconf:\/\//gi, 'https://'); }
 function js_convertJsonToSsLink(jsonConfig) { const { method, password, server, server_port, tag } = jsonConfig; if (method && password && server && server_port) { try { const credentials = `${method}:${password}`; const encodedCredentials = js_encodeBase64(credentials); return `ss://${encodedCredentials}@${server}:${server_port}#${encodeURIComponent(tag || `${server}:${server_port}`)}`; } catch (e) { return null; } } return null; }
+
+/**
+ * Identifies configs that use Cloudflare worker domains in their address, SNI, or host fields.
+ * This is an improved, more comprehensive version.
+ * @param {string[]} configLines - An array of config strings.
+ * @returns {string[]} An array of configs identified as using Cloudflare.
+ */
 function js_identifyCloudflareDomains(configLines) {
     const cloudflareDomains = [".workers.dev", ".pages.dev"];
     const identifiedConfigs = new Set();
+
     for (const line of configLines) {
         try {
-            let address = '';
-            const protocol = line.split('://')[0];
-            if (protocol === 'vmess') {
-                const decoded = JSON.parse(js_decodeBase64(line.substring(8)));
-                address = decoded.add || '';
-            } else if (protocol === 'vless' || protocol === 'trojan') {
-                address = line.split('@')[1].split(':')[0].split('?')[0];
+            // A set to hold all domains/addresses found in the config line
+            const domainsToCheck = new Set();
+            const protocol = line.split('://')[0].toLowerCase();
+            
+            if (['vless', 'trojan', 'ss'].includes(protocol)) {
+                // For vless/trojan/ss: user@address:port?params#name
+                const urlPart = line.split('#')[0];
+                const parsedUrl = new URL(urlPart);
+                domainsToCheck.add(parsedUrl.hostname);
+
+                // Check common query parameters for actual domain/SNI
+                if (parsedUrl.searchParams.has('sni')) domainsToCheck.add(parsedUrl.searchParams.get('sni'));
+                if (parsedUrl.searchParams.has('host')) domainsToCheck.add(parsedUrl.searchParams.get('host'));
+                if (parsedUrl.searchParams.has('peer')) domainsToCheck.add(parsedUrl.searchParams.get('peer'));
+
+            } else if (protocol === 'vmess') {
+                // For vmess: vmess://BASE64
+                const b64 = line.substring(8);
+                const config = JSON.parse(js_decodeBase64(b64));
+                if (config.add) domainsToCheck.add(config.add);
+                if (config.host) domainsToCheck.add(config.host);
+                if (config.sni) domainsToCheck.add(config.sni);
             }
-            if (address && cloudflareDomains.some(d => address.toLowerCase().endsWith(d))) {
-                identifiedConfigs.add(line);
+
+            // Check all collected domains against the Cloudflare list
+            for (let domain of domainsToCheck) {
+                const domainName = domain.split(':')[0].toLowerCase(); // Remove port if present
+                if (cloudflareDomains.some(cf_domain => domainName.endsWith(cf_domain))) {
+                    identifiedConfigs.add(line);
+                    break; // Once identified, no need to check other domains for this line
+                }
             }
-        } catch (e) { /* Ignore parsing errors */ }
+        } catch (e) {
+            // Ignore lines that cannot be parsed
+        }
     }
     return Array.from(identifiedConfigs);
 }
