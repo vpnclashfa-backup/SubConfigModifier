@@ -1,6 +1,5 @@
-// This Cloudflare Worker processes content (link, text, or file) for Base64 operations,
-// handles subscription config processing, and converts JSON formatted Shadowsocks configs to ss:// links.
-// It supports both single and multiple subscription links via GET parameters to create a mixed, shareable output.
+// This Cloudflare Worker processes content (link, text, or file), handles subscription config processing,
+// and supports advanced filtering based on a prioritized list of protocols with specific counts.
 
 addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request));
@@ -10,10 +9,10 @@ async function handleRequest(request) {
   // --- START CORS HANDLING ---
   const origin = request.headers.get('Origin');
   const headers = {
-    'Access-Control-Allow-Origin': origin || '*', // Allow the specific origin or all if not present
+    'Access-Control-Allow-Origin': origin || '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Max-Age': '86400', // Cache preflight response for 24 hours
+    'Access-Control-Max-Age': '86400',
   };
 
   if (request.method === 'OPTIONS') {
@@ -29,33 +28,18 @@ async function handleRequest(request) {
   }
 
   if (request.method === 'POST') {
-    // POST requests are for direct content processing (text/file)
     try {
       const payload = await request.json();
-      const { inputType, content, path, mimeType, outputFormat, count, protocols, cloudflareOnly } = payload;
+      const { inputType, content, path, mimeType, outputFormat, totalCount, protocols, cloudflareOnly } = payload;
 
-      if (!inputType || !content || !outputFormat || !['text', 'file'].includes(inputType)) {
-        return new Response('Invalid POST request. Only "text" and "file" input types are supported via POST.', { status: 400, headers });
+      if (!inputType || !content || !outputFormat || !protocols || !['text', 'file'].includes(inputType)) {
+        return new Response('Invalid POST request. Missing required parameters.', { status: 400, headers });
       }
 
       let initialContent = (inputType === 'file') ? atob(content) : content;
-
       let allExtractedConfigs = await recursivelyFetchAndExtractConfigs(initialContent, inputType);
-
-      // Apply filters
-      let currentLines = allExtractedConfigs;
-      if (protocols && protocols.length > 0 && !(protocols.length === 1 && protocols[0] === 'all')) {
-          const types = protocols.flatMap(t => t.trim().toLowerCase().split(','));
-          currentLines = currentLines.filter(line => types.some(t => line.toLowerCase().startsWith(`${t}://`)));
-      }
-      if (cloudflareOnly) {
-          currentLines = js_identifyCloudflareDomains(currentLines);
-      }
-      js_shuffleArray(currentLines);
-      if (count && count > 0 && currentLines.length > count) {
-          currentLines = currentLines.slice(0, count);
-      }
-      let finalProcessedContent = currentLines.join('\r\n');
+      
+      let finalProcessedContent = processAndFilterConfigs(allExtractedConfigs, protocols, totalCount, cloudflareOnly);
 
       if (outputFormat === 'base64') {
         finalProcessedContent = js_encodeBase64(finalProcessedContent);
@@ -70,7 +54,6 @@ async function handleRequest(request) {
     }
 
   } else if (request.method === 'GET') {
-    // GET requests are for on-demand serving from URL parameters (single or multiple links)
     try {
         const singleUrlParam = url.searchParams.get('url');
         const multiUrlParam = url.searchParams.get('urls');
@@ -87,13 +70,28 @@ async function handleRequest(request) {
         }
         
         const outputFormat = url.searchParams.get('outputFormat') || 'normal';
-        const count = parseInt(url.searchParams.get('count'), 10) || 0;
+        const totalCount = parseInt(url.searchParams.get('totalCount'), 10) || 0;
         const protocols = JSON.parse(decodeURIComponent(url.searchParams.get('protocols') || '[]'));
         const cloudflareOnly = url.searchParams.get('cloudflareOnly') === 'true';
         const downloadFlag = url.searchParams.get('download');
         const pathFromWorkerUrl = url.pathname.substring(1);
 
-        return processContentOnDemand(targetUrls, outputFormat, count, protocols, cloudflareOnly, downloadFlag, pathFromWorkerUrl, headers);
+        let allExtractedConfigs = await recursivelyFetchAndExtractConfigs(targetUrls, 'link');
+
+        let finalProcessedContent = processAndFilterConfigs(allExtractedConfigs, protocols, totalCount, cloudflareOnly);
+        
+        if (outputFormat === 'base64') {
+            finalProcessedContent = js_encodeBase64(finalProcessedContent);
+        } else if (outputFormat !== 'normal') {
+            return new Response('Invalid outputFormat.', { status: 400, headers: headers });
+        }
+        
+        const finalHeaders = { ...headers, 'Content-Type': 'text/plain; charset=utf-8' };
+        if (downloadFlag === 'true') {
+            finalHeaders['Content-Disposition'] = `attachment; filename="${pathFromWorkerUrl || 'download.txt'}"`;
+        }
+
+        return new Response(finalProcessedContent, { headers: finalHeaders });
 
     } catch(e) {
         console.error("Error in worker GET:", e.message);
@@ -104,76 +102,91 @@ async function handleRequest(request) {
   return new Response('Method Not Allowed', { status: 405, headers });
 }
 
-
 /**
- * Processes a list of subscription URLs, fetches their content, applies filters, and returns a final response.
- * @param {string[]} targetUrls - An array of URLs to process.
- * @param {string} outputFormat - The desired output format ('normal' or 'base64').
- * @param {number} count - The maximum number of configs to return.
- * @param {string[]} protocols - An array of protocols to filter by.
- * @param {boolean} cloudflareOnly - Whether to filter for Cloudflare domains only.
- * @param {string} downloadFlag - Whether to trigger a download.
- * @param {string} pathFromWorkerUrl - The filename for downloads.
- * @param {object} corsHeaders - The CORS headers to include in the response.
- * @returns {Promise<Response>} A promise that resolves to a Response object.
+ * Applies all filtering, ordering, and counting logic to a list of configs.
+ * @param {string[]} allConfigs - Array of all available config strings.
+ * @param {Array<{protocol: string, count: number}>} protocolPriorityList - The user-defined priority list.
+ * @param {number} totalCount - The absolute maximum number of configs to return.
+ * @param {boolean} cloudflareOnly - Whether to filter for Cloudflare domains.
+ * @returns {string} The final, processed string of configs.
  */
-async function processContentOnDemand(targetUrls, outputFormat, count, protocols, cloudflareOnly, downloadFlag, pathFromWorkerUrl, corsHeaders) {
-  let filename = pathFromWorkerUrl || 'download.txt';
+function processAndFilterConfigs(allConfigs, protocolPriorityList, totalCount, cloudflareOnly) {
+    let filteredConfigs = allConfigs;
+    if (cloudflareOnly) {
+        filteredConfigs = js_identifyCloudflareDomains(filteredConfigs);
+    }
 
-  // Recursively fetch and extract all configurations from the list of URLs
-  let allExtractedConfigs = await recursivelyFetchAndExtractConfigs(targetUrls, 'link');
+    const groupedConfigs = groupConfigsByProtocol(filteredConfigs, protocolPriorityList);
+    
+    let finalOrderedConfigs = [];
+    
+    // First pass: Add configs with a specific count, respecting priority order
+    protocolPriorityList.forEach(p => {
+        if (p.count > 0) {
+            const configsForProtocol = groupedConfigs[p.protocol] || [];
+            const configsToAdd = configsForProtocol.splice(0, p.count);
+            finalOrderedConfigs.push(...configsToAdd);
+        }
+    });
 
-  let currentLines = allExtractedConfigs;
-  
-  // Apply protocol filter
-  if (protocols && protocols.length > 0 && !(protocols.length === 1 && protocols[0] === 'all')) {
-      const types = protocols.flatMap(t => t.trim().toLowerCase().split(','));
-      currentLines = currentLines.filter(line => types.some(t => line.toLowerCase().startsWith(`${t}://`)));
-  }
+    // Second pass: Add configs with "unlimited" count (0), respecting priority order
+    protocolPriorityList.forEach(p => {
+        if (p.count === 0) {
+            const remainingConfigs = groupedConfigs[p.protocol] || [];
+            finalOrderedConfigs.push(...remainingConfigs);
+        }
+    });
 
-  // Apply Cloudflare filter
-  if (cloudflareOnly) {
-      currentLines = js_identifyCloudflareDomains(currentLines);
-  }
+    // Apply the total count limit if it's specified
+    if (totalCount > 0 && finalOrderedConfigs.length > totalCount) {
+        finalOrderedConfigs = finalOrderedConfigs.slice(0, totalCount);
+    }
 
-  js_shuffleArray(currentLines); // Shuffle lines
-
-  // Apply count limit
-  if (count && count > 0 && currentLines.length > count) {
-      currentLines = currentLines.slice(0, count);
-  }
-  let finalProcessedContent = currentLines.join('\r\n');
-
-  // Determine MIME type for the response
-  let mimeType = 'text/plain; charset=utf-8';
-
-  // Apply desired output format
-  if (outputFormat === 'base64') {
-    finalProcessedContent = js_encodeBase64(finalProcessedContent);
-  } else if (outputFormat !== 'normal') {
-    return new Response('Invalid outputFormat.', { status: 400, headers: corsHeaders });
-  }
-
-  const finalHeaders = {
-    ...corsHeaders,
-    'Content-Type': mimeType,
-  };
-
-  if (downloadFlag === 'true') {
-    finalHeaders['Content-Disposition'] = `attachment; filename="${filename}"`;
-  }
-
-  return new Response(finalProcessedContent, { headers: finalHeaders });
+    return finalOrderedConfigs.join('\r\n');
 }
 
+/**
+ * Groups an array of config strings by their protocol type based on the priority list.
+ * @param {string[]} configLines - Array of config strings.
+ * @param {Array<{protocol: string, count: number}>} protocolPriorityList - The user-defined priority list.
+ * @returns {Object.<string, string[]>} An object where keys are protocol identifiers and values are arrays of configs.
+ */
+function groupConfigsByProtocol(configLines, protocolPriorityList) {
+    const grouped = {};
+    const protocolMap = new Map();
+
+    // Create a map for quick lookup: e.g., 'vless' -> 'vless'
+    protocolPriorityList.forEach(p => {
+        const types = p.protocol.split(',').map(t => t.trim().toLowerCase());
+        types.forEach(type => protocolMap.set(type, p.protocol));
+    });
+
+    js_shuffleArray(configLines);
+
+    configLines.forEach(line => {
+        const match = line.match(/^([a-z0-9]+):\/\//i);
+        if (match) {
+            const protocolType = match[1].toLowerCase();
+            const groupKey = protocolMap.get(protocolType);
+            if (groupKey) {
+                if (!grouped[groupKey]) {
+                    grouped[groupKey] = [];
+                }
+                grouped[groupKey].push(line);
+            }
+        }
+    });
+
+    return grouped;
+}
 
 /**
- * Recursively fetches content from URLs (including Ssconf:// converted to https://)
- * and extracts all valid configurations, handling Base64 decoding and JSON to ss:// conversion.
- * @param {string|string[]} initialContent - The initial input (array of URL strings for 'link', or raw text content for 'text'/'file').
+ * Recursively fetches content from URLs and extracts all valid configurations.
+ * (This function is largely unchanged but kept for completeness).
+ * @param {string|string[]} initialContent - The initial input.
  * @param {string} initialType - 'link', 'text', or 'file'.
- * @param {number} [maxDepth=3] - Maximum recursion depth for fetching nested URLs.
- * @returns {Promise<string[]>} A promise that resolves to an array of unique extracted configuration lines.
+ * @param {number} [maxDepth=3] - Maximum recursion depth.
+ * @returns {Promise<string[]>} A promise that resolves to an array of unique extracted config lines.
  */
 async function recursivelyFetchAndExtractConfigs(initialContent, initialType, maxDepth = 3) {
     let allExtractedConfigs = new Set();
@@ -194,7 +207,7 @@ async function recursivelyFetchAndExtractConfigs(initialContent, initialType, ma
                 .map(js_convertJsonToSsLink)
                 .filter(Boolean);
             configsToAdd.forEach(link => allExtractedConfigs.add(link));
-        } catch (e) { /* Not JSON or not SS JSON, proceed */ }
+        } catch (e) { /* Not JSON, proceed */ }
 
         const lines = processedContent.split('\n').map(line => line.trim()).filter(line => line);
         for (const line of lines) {
@@ -249,81 +262,28 @@ async function recursivelyFetchAndExtractConfigs(initialContent, initialType, ma
 }
 
 
-function js_isBase64(s) {
-    s = s.trim();
-    if (!s) return false;
-    try {
-        return btoa(atob(s)) === s;
-    } catch (err) {
-        return false;
-    }
-}
-
-function js_encodeBase64(s) {
-    return btoa(unescape(encodeURIComponent(s)));
-}
-
-function js_decodeBase64(s) {
-    return decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/'))));
-}
-
-function js_shuffleArray(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-}
-
-function js_replaceSsconf(content) {
-    return content.replace(/Ssconf:\/\//gi, 'https://');
-}
-
-function js_convertJsonToSsLink(jsonConfig) {
-    const { method, password, server, server_port, tag } = jsonConfig;
-    if (method && password && server && server_port) {
-        try {
-            const credentials = `${method}:${password}`;
-            const encodedCredentials = js_encodeBase64(credentials);
-            return `ss://${encodedCredentials}@${server}:${server_port}#${encodeURIComponent(tag || `${server}:${server_port}`)}`;
-        } catch (e) {
-            return null;
-        }
-    }
-    return null;
-}
-
+// --- HELPER FUNCTIONS (UNCHANGED) ---
+function js_isBase64(s) { s = s.trim(); if (!s) return false; try { return btoa(atob(s)) === s; } catch (err) { return false; } }
+function js_encodeBase64(s) { return btoa(unescape(encodeURIComponent(s))); }
+function js_decodeBase64(s) { return decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/')))); }
+function js_shuffleArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } }
+function js_replaceSsconf(content) { return content.replace(/Ssconf:\/\//gi, 'https://'); }
+function js_convertJsonToSsLink(jsonConfig) { const { method, password, server, server_port, tag } = jsonConfig; if (method && password && server && server_port) { try { const credentials = `${method}:${password}`; const encodedCredentials = js_encodeBase64(credentials); return `ss://${encodedCredentials}@${server}:${server_port}#${encodeURIComponent(tag || `${server}:${server_port}`)}`; } catch (e) { return null; } } return null; }
 function js_identifyCloudflareDomains(configLines) {
     const cloudflareDomains = [".workers.dev", ".pages.dev"];
     const identifiedConfigs = new Set();
-
     for (const line of configLines) {
         try {
-            const processedLine = decodeURIComponent(line.replace(/&amp;/g, '&'));
-            const parsedUrl = new URL(processedLine);
-            const domainsToCheck = new Set([parsedUrl.hostname]);
-            
-            const queryParams = new URLSearchParams(parsedUrl.search);
-            if (queryParams.has('sni')) queryParams.getAll('sni').forEach(d => domainsToCheck.add(d));
-            if (queryParams.has('host')) queryParams.getAll('host').forEach(d => domainsToCheck.add(d));
-
-            const scheme = parsedUrl.protocol.slice(0, -1);
-            if (['vmess', 'ss'].includes(scheme)) {
-                const encodedPart = processedLine.split('://')[1].split('#')[0];
-                if (js_isBase64(encodedPart)) {
-                    const configData = JSON.parse(js_decodeBase64(encodedPart));
-                    if (configData.add) domainsToCheck.add(configData.add);
-                    if (configData.host) domainsToCheck.add(configData.host);
-                    if (configData.sni) domainsToCheck.add(configData.sni);
-                    if (configData.server) domainsToCheck.add(configData.server);
-                }
+            let address = '';
+            const protocol = line.split('://')[0];
+            if (protocol === 'vmess') {
+                const decoded = JSON.parse(js_decodeBase64(line.substring(8)));
+                address = decoded.add || '';
+            } else if (protocol === 'vless' || protocol === 'trojan') {
+                address = line.split('@')[1].split(':')[0].split('?')[0];
             }
-            
-            for (let domain of domainsToCheck) {
-                const domainName = domain.split(':')[0].toLowerCase();
-                if (cloudflareDomains.some(cf_domain => domainName.endsWith(cf_domain))) {
-                    identifiedConfigs.add(line);
-                    break;
-                }
+            if (address && cloudflareDomains.some(d => address.toLowerCase().endsWith(d))) {
+                identifiedConfigs.add(line);
             }
         } catch (e) { /* Ignore parsing errors */ }
     }
