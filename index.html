@@ -176,7 +176,10 @@
                 </div>
             </div>
             <div class="mb-4 text-right">
-                <label class="block text-sm font-medium mb-2">اولویت و تعداد پروتکل‌ها:</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-medium">اولویت و تعداد پروتکل‌ها:</label>
+                    <button id="toggleAllProtocols" type="button" style="background: none; border: none; padding: 0; color: var(--input-border-focus); cursor: pointer;" class="text-xs font-semibold hover:underline">انتخاب همه</button>
+                </div>
                  <p class="text-xs text-gray-500 mb-2">پروتکل‌ها را برای اولویت‌بندی بکشید و رها کنید. تعداد 0 به معنی نامحدود است.</p>
                 <div id="protocol-list" class="space-y-2">
                     <!-- Protocol items will be injected here by JavaScript -->
@@ -242,6 +245,9 @@ const PROTOCOL_LIST = [
     { name: "SSH", value: "ssh", enabled: false },
     { name: "Warp", value: "warp", enabled: false },
     { name: "Socks5", value: "socks5", enabled: false },
+    { name: "SOCKS4", value: "socks4", enabled: false },
+    { name: "HTTP", value: "http", enabled: false },
+    { name: "HTTPS", value: "https's", enabled: false },
     { name: "MTProto", value: "mtproto", enabled: false },
 ];
 
@@ -323,7 +329,8 @@ function displayProtocolStats(content, isBase64) {
     const protocolColors = {
         vless: 'bg-blue-500', trojan: 'bg-green-500', ss: 'bg-purple-500', vmess: 'bg-yellow-500 text-black',
         hysteria2: 'bg-red-500', tuic: 'bg-pink-500', ssr: 'bg-indigo-500', juicity: 'bg-lime-500',
-        default: 'bg-gray-500'
+        http: 'bg-gray-400 text-black', 'https' : 'bg-gray-500', socks4: 'bg-orange-400', socks5: 'bg-orange-500',
+        default: 'bg-gray-600'
     };
     
     let statsHtml = `<h4 class="font-bold mb-3">آمار کانفیگ‌های خروجی:</h4>`;
@@ -406,8 +413,6 @@ function updateTotalCount() {
 
     if (isAnyCountUnlimited) {
         totalCountInput.disabled = false;
-        // If the user hasn't set a total count, we don't force one.
-        // If they have set one, we keep it.
     } else {
         totalCountInput.value = calculatedTotal;
         totalCountInput.disabled = true;
@@ -433,7 +438,7 @@ function getProtocolPriorityList() {
 document.addEventListener('DOMContentLoaded', () => {
     // --- Element Selectors ---
     const allElements = {
-        processorWorkerInput: document.getElementById('processorWorkerInput'), saveWorkerUrlButton: document.getElementById('saveWorkerUrlButton'), workerUrlMessage: document.getElementById('workerUrlMessage'), processButton: document.getElementById('processButton'), loadingMessage: document.getElementById('loadingMessage'), errorMessage: document.getElementById('errorMessage'), errorText: document.getElementById('errorText'), resultArea: document.getElementById('resultArea'), linkResultContainer: document.getElementById('linkResultContainer'), resultLink: document.getElementById('resultLink'), convertedContentDisplay: document.getElementById('convertedContentDisplay'), copyMessage: document.getElementById('copyMessage'), themeToggle: document.getElementById('themeToggle'), themeIcon: document.getElementById('themeIcon'), tehranTimeDisplay: document.getElementById('tehranTime'), suggestedWorkerMessage: document.getElementById('suggestedWorkerMessage'), linkInputContainer: document.getElementById('linkInputContainer'), textInputContainer: document.getElementById('textInputContainer'), fileInputContainer: document.getElementById('fileInputContainer'), pathInput: document.getElementById('pathInput'), urlInput: document.getElementById('urlInput'),
+        processorWorkerInput: document.getElementById('processorWorkerInput'), saveWorkerUrlButton: document.getElementById('saveWorkerUrlButton'), workerUrlMessage: document.getElementById('workerUrlMessage'), processButton: document.getElementById('processButton'), loadingMessage: document.getElementById('loadingMessage'), errorMessage: document.getElementById('errorMessage'), errorText: document.getElementById('errorText'), resultArea: document.getElementById('resultArea'), linkResultContainer: document.getElementById('linkResultContainer'), resultLink: document.getElementById('resultLink'), convertedContentDisplay: document.getElementById('convertedContentDisplay'), copyMessage: document.getElementById('copyMessage'), themeToggle: document.getElementById('themeToggle'), themeIcon: document.getElementById('themeIcon'), tehranTimeDisplay: document.getElementById('tehranTime'), suggestedWorkerMessage: document.getElementById('suggestedWorkerMessage'), linkInputContainer: document.getElementById('linkInputContainer'), textInputContainer: document.getElementById('textInputContainer'), fileInputContainer: document.getElementById('fileInputContainer'), pathInput: document.getElementById('pathInput'), urlInput: document.getElementById('urlInput'), toggleAllProtocolsButton: document.getElementById('toggleAllProtocols'),
     };
 
     // --- Theme & Time Management ---
@@ -448,13 +453,28 @@ document.addEventListener('DOMContentLoaded', () => {
     setupProcessorWorkerUrl();
     initializeProtocolList();
 
-    // --- UI Listeners (Input Type) ---
+    // --- UI Listeners (Input Type, Protocol Toggle) ---
     document.querySelectorAll('input[name="inputType"]').forEach(radio => radio.addEventListener('change', () => {
         const selectedType = document.querySelector('input[name="inputType"]:checked').value;
         allElements.linkInputContainer.classList.toggle('hidden', selectedType !== 'link');
         allElements.textInputContainer.classList.toggle('hidden', selectedType !== 'text');
         allElements.fileInputContainer.classList.toggle('hidden', selectedType !== 'file');
     }));
+
+    allElements.toggleAllProtocolsButton.addEventListener('click', () => {
+        const checkboxes = document.querySelectorAll('.protocol-toggle');
+        if (checkboxes.length === 0) return;
+        const shouldSelectAll = allElements.toggleAllProtocolsButton.textContent === 'انتخاب همه';
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked !== shouldSelectAll) {
+                checkbox.checked = shouldSelectAll;
+                const event = new Event('change', { bubbles: true });
+                checkbox.dispatchEvent(event);
+            }
+        });
+        allElements.toggleAllProtocolsButton.textContent = shouldSelectAll ? 'لغو انتخاب همه' : 'انتخاب همه';
+    });
+
 
     // --- Core Action Listeners ---
     allElements.saveWorkerUrlButton.addEventListener('click', () => {
