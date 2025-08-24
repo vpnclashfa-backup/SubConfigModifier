@@ -209,8 +209,12 @@ async function recursivelyFetchAndExtractConfigs(initialContent, initialType, ma
         } catch (e) { /* Not JSON, proceed */ }
 
         const lines = processedContent.split('\n').map(line => line.trim()).filter(line => line);
+        const httpProxyRegex = /^https?:\/\/(\d{1,3}(?:\.\d{1,3}){3}:\d+)\/?(#.*)?$/i;
+
         for (const line of lines) {
-            if (line.match(/^(vless|vmess|ss|ssr|trojan|snell|mieru|anytls|hysteria|hysteria2|hy2|tuic|wireguard|ssh|juicity|warp|socks5|mtproto):\/\//i)) {
+            if (line.match(/^(vless|vmess|ss|ssr|trojan|snell|mieru|anytls|hysteria|hysteria2|hy2|tuic|wireguard|ssh|juicity|warp|socks4|socks5|mtproto):\/\//i)) {
+                allExtractedConfigs.add(line);
+            } else if (httpProxyRegex.test(line)) {
                 allExtractedConfigs.add(line);
             } else if (line.match(/^ssconf:\/\//i)) {
                 const httpsUrl = js_replaceSsconf(line);
